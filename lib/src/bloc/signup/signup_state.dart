@@ -1,47 +1,46 @@
-import 'package:flutter/cupertino.dart';
 
-class LoginState{
+
+class SignupState{
   bool isLoading;
   bool isSuccess;
   String errorMessage;
 
-  LoginState({this.isLoading,this.isSuccess,this.errorMessage});
+  SignupState({this.isLoading,this.isSuccess,this.errorMessage});
 
-  LoginState copyWith({
+  SignupState copyWith({
     bool isLoading,
     bool isSuccess,
     String errorMessage,
   }) {
-    return LoginState(
+    return SignupState(
         isLoading: isLoading ?? this.isLoading,
         isSuccess: isSuccess ?? this.isSuccess,
         errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 
-  factory LoginState.initial() {
-    return LoginState(
+  factory SignupState.initial() {
+    return SignupState(
       isLoading: false,
       isSuccess: false,
       errorMessage: null,
     );
   }
 
-  LoginState ready(errorMessage){
+  SignupState ready(errorMessage){
     return copyWith(
       isLoading: false,
       errorMessage: errorMessage,
     );
   }
 
-  LoginState loading(){
+  SignupState loading(){
     return copyWith(
-      isLoading: true,
-      errorMessage: null
+      isLoading: true
     );
   }
 
-  LoginState success(){
+  SignupState success(){
     return copyWith(
       isLoading: false,
       isSuccess: true,

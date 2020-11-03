@@ -1,11 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:hackathon/locator.dart';
+import 'package:hackathon/src/resources/provider/shared_preference.dart';
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final _prefs = locator<Preference>();
   @override
   Widget build(BuildContext context) {
     final double deviceWidth = MediaQuery.of(context).size.width;
@@ -24,7 +27,24 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         ),
       ),
-      drawer: Drawer(),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue
+              ),
+            ),
+            ListTile(
+              title: Text("Log out"),
+              onTap: (){
+                Navigator.of(context).pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
+              },
+            )
+          ],
+        )
+      ),
       body: Center(
         child: ListView(
           padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.05),
@@ -66,6 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             GestureDetector(
               onTap: (){
+                _prefs.logout();
                 Navigator.of(context).pushNamed('/validate', arguments: (Route<dynamic> route) => false);
               },
               child: Container(

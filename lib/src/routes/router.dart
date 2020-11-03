@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hackathon/src/ui/screen/home.dart';
 import 'package:hackathon/src/ui/screen/login.dart';
+import 'package:hackathon/src/ui/screen/signup.dart';
 import 'package:hackathon/src/ui/screen/speech2text.dart';
 import 'package:hackathon/src/ui/screen/text2speech.dart';
 import 'package:hackathon/src/ui/screen/validate.dart';
@@ -27,6 +28,14 @@ class AppRouter {
       case '/validate':
         return MaterialPageRoute(
             builder: (_) => ValidateScreen()
+        );
+      case '/signup':
+        return MaterialPageRoute(
+            builder: (_) => SignupScreen()
+        );
+      case '/login':
+        return MaterialPageRoute(
+            builder: (_) => LoginScreen()
         );
     }
   }

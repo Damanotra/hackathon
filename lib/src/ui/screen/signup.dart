@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hackathon/src/bloc/login/login_bloc.dart';
-import 'package:hackathon/src/bloc/login/login_state.dart';
-import 'package:hackathon/src/bloc/login/login_event.dart';
+import 'package:hackathon/src/bloc/signup/signup_bloc.dart';
+import 'package:hackathon/src/bloc/signup/signup_state.dart';
+import 'package:hackathon/src/bloc/signup/signup_event.dart';
 
 
-class LoginScreen extends StatefulWidget {
+class SignupScreen extends StatefulWidget {
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  _SignupScreenState createState() => _SignupScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final _loginBloc = LoginBloc();
+class _SignupScreenState extends State<SignupScreen> {
+  final _signupBloc = SignupBloc();
   final _emailController = TextEditingController();
   final _passwordController  = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -26,8 +26,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final deviceHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       body: Center(
-        child: BlocListener<LoginBloc,LoginState>(
-          cubit: _loginBloc,
+        child: BlocListener<SignupBloc,SignupState>(
+          cubit: _signupBloc,
           listener: (context,state){
             if(state.isSuccess){
               redirectToHome();
@@ -35,12 +35,12 @@ class _LoginScreenState extends State<LoginScreen> {
               Scaffold.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(
-                  SnackBar(content: Text(state.errorMessage))
+                    SnackBar(content: Text(state.errorMessage))
                 );
             }
           },
-          child: BlocBuilder<LoginBloc,LoginState>(
-            cubit: _loginBloc,
+          child: BlocBuilder<SignupBloc,SignupState>(
+            cubit: _signupBloc,
             builder:(context,state){
               if(!state.isLoading){
                 return Form(
@@ -67,21 +67,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(height: deviceHeight*0.02),
                       ElevatedButton(
                         onPressed: (){
-                          _loginBloc.add(SubmitEvent(email: _emailController.text,password: _passwordController.text));
+                          _signupBloc.add(SubmitEvent(email: _emailController.text,password: _passwordController.text));
                         },
-                        child: Text("Login"),
-                        style: ElevatedButton.styleFrom(
-                            primary: Colors.orange,
-                            padding:
-                            EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                            textStyle: TextStyle()),
-                      ),
-                      SizedBox(height: deviceHeight*0.02),
-                      ElevatedButton(
-                        onPressed: (){
-                          Navigator.of(context).pushNamed('/signup');
-                        },
-                        child: Text("Sign Up"),
+                        child: Text("Signup"),
                         style: ElevatedButton.styleFrom(
                             primary: Colors.orange,
                             padding:

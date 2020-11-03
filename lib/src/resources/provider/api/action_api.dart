@@ -50,6 +50,22 @@ class ActionAPI  extends BaseAPI {
     return (response as Map);
   }
 
+  Future<Map> signUp(BuildContext context,String email,String password) async {
+    final response = await doPost(
+        "signup",
+        {
+          "email":email,
+          "password":password
+        },
+        context);
+    await _prefs.setSessionId((response as Map)['session_id']);
+    await _prefs.setEmail(email);
+    await _prefs.setPassword(password);
+    print(response.toString());
+    return response;
+  }
+
+
   Future<Map> checkSession(BuildContext context) async {
     final response = await doPost(
         'user',

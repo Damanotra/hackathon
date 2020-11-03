@@ -384,12 +384,6 @@ class _Text2SpeechState extends State<Text2Speech> {
             throw Exception('Unable to create the buffer');
           }
         }
-      } else if (_media == Media.remoteExampleFile) {
-        // We have to play an example audio file loaded via a URL
-        if (_codec == Codec.mp3)
-          audioFilePath = exampleAudioFilePathMP3;
-        else if (codec == Codec.opusOGG)
-          audioFilePath = exampleAudioFilePathOPUS;
       }
 
       // Check whether the user wants to use the audio player features
