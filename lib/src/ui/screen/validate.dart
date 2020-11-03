@@ -5,9 +5,9 @@ import 'dart:math';
 import 'dart:typed_data' show Uint8List;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hackathon/src/bloc/speech2text/s2t_bloc.dart';
-import 'package:hackathon/src/bloc/speech2text/s2t_event.dart';
-import 'package:hackathon/src/bloc/speech2text/s2t_state.dart';
+import 'package:hackathon/src/bloc/validate/validate_bloc.dart';
+import 'package:hackathon/src/bloc/validate/validate_event.dart';
+import 'package:hackathon/src/bloc/validate/validate_state.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:flutter_sound/flutter_sound.dart';
@@ -35,13 +35,13 @@ final exampleAudioFilePathOPUS =
 final albumArtPath =
     "https://file-examples-com.github.io/uploads/2017/10/file_example_PNG_500kB.png";
 
-class Speech2Text extends StatefulWidget {
+class ValidateScreen extends StatefulWidget {
   @override
-  _Speech2TextState createState() => _Speech2TextState();
+  _ValidateScreenState createState() => _ValidateScreenState();
 }
 
-class _Speech2TextState extends State<Speech2Text> {
-  final _s2tBloc = S2TBloc();
+class _ValidateScreenState extends State<ValidateScreen> {
+  final _validateBloc = ValidateBloc();
   final _annotationController = TextEditingController();
   List<String> _path = [
     null,
@@ -112,7 +112,7 @@ class _Speech2TextState extends State<Speech2Text> {
 
   @override
   void initState() {
-    _s2tBloc.add(InitialS2TEvent());
+    _validateBloc.add(InitialValidateEvent());
     super.initState();
     init();
   }
@@ -236,8 +236,8 @@ class _Speech2TextState extends State<Speech2Text> {
       Codec codec = _codec;
       if (_media == Media.file) {
 //          audioFilePath = localFilePath;
-          audioFilePath = voicepath;
-          print(audioFilePath);
+        audioFilePath = voicepath;
+        print(audioFilePath);
       }
       if (audioFilePath != null) {
         await playerModule.startPlayer(
@@ -510,74 +510,98 @@ class _Speech2TextState extends State<Speech2Text> {
         title: const Text('Flutter Sound Demo'),
 
       ),
-      body: BlocBuilder<S2TBloc,S2TState>(
-        cubit: _s2tBloc,
-        builder: (context, state) {
-          if (!state.isLoading) {
-            if(state.errorMessage==null){
-              voicepath = state.localVoicePath;
-              print(voicepath);
-              return ListView(children: <Widget>[
-                playerSection,
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
-                  child: TextField(
-                    controller: _annotationController,
-                    keyboardType: TextInputType.multiline,
-                    maxLines: null,
-                    decoration: InputDecoration(
-                        hintText: "Masukan kalimat yang kamu dengar",
-                        //                contentPadding: EdgeInsets.fromLTRB(15, 12, 15, 12),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(0))),
-                  ),
-                ),
-                SizedBox(height: deviceHeight * 0.07),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      _s2tBloc.add(SubmitEvent(
-                        annotation: _annotationController.text,
-                        context: context
-                      ));
-                    },
-                    style: ElevatedButton.styleFrom(
-                        primary: Colors.orange,
-                        padding:
-                        EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                        textStyle: TextStyle()),
-                    child: Text("Submit"),
-                  ),
-                ),
-                SizedBox(
-                  height: deviceHeight * 0.02,
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      _s2tBloc.add(SkipEvent());
-                    },
-                    style: ElevatedButton.styleFrom(
-                        primary: Colors.orange,
-                        padding:
-                        EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                        textStyle: TextStyle()),
-                    child: Text("Skip"),
-                  ),
-                )
-                // ignore: missing_return
-              ]);
-            }
-            else{
-              return Text(state.errorMessage);
-            }
-          }
-          else {
-            return CircularProgressIndicator();
+      body: BlocListener<ValidateBloc,ValidateState>(
+        cubit: _validateBloc,
+        listener: (context, state){
+          if(state.isDone){
+            Navigator.pop(context);
           }
         },
+        child: BlocBuilder<ValidateBloc,ValidateState>(
+          cubit: _validateBloc,
+          builder: (context, state) {
+            if (!state.isLoading) {
+              if(state.errorMessage==null){
+                voicepath = state.localVoicePath;
+                print(state.voiceList.toString());
+                return ListView(children: <Widget>[
+                  playerSection,
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
+                    child: Text(state.voiceList[state.voiceIndex]["text_label"])
+                  ),
+                  SizedBox(height: deviceHeight * 0.07),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
+                    child: Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            _validateBloc.add(SubmitEvent(
+                                validation: true,
+                                context: context
+                            ));
+                          },
+                          style: ElevatedButton.styleFrom(
+                              primary: Colors.orange,
+                              padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                              textStyle: TextStyle()),
+                          child: Container(
+                            height: deviceHeight*0.06,
+                            width: deviceWidth*0.37,
+                            alignment: AlignmentDirectional.center,
+                            child: Text("True")),
+                        ),
+                        SizedBox(width: deviceWidth*0.06),
+                        ElevatedButton(
+                          onPressed: () {
+                            _validateBloc.add(SubmitEvent(
+                                validation: true,
+                                context: context
+                            ));
+                          },
+                          style: ElevatedButton.styleFrom(
+                              primary: Colors.orange,
+                              padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                              textStyle: TextStyle()),
+                          child: Container(
+                            height: deviceHeight*0.06,
+                            width: deviceWidth*0.37,
+                            alignment: AlignmentDirectional.center,
+                            child: Text("False")),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: deviceHeight * 0.02,
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _validateBloc.add(SkipEvent());
+                      },
+                      style: ElevatedButton.styleFrom(
+                          primary: Colors.orange,
+                          padding:
+                          EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                          textStyle: TextStyle()),
+                      child: Text("Skip"),
+                    ),
+                  )
+                  // ignore: missing_return
+                ]);
+              }
+              else{
+                return Text(state.errorMessage);
+              }
+            }
+            else {
+              return CircularProgressIndicator();
+            }
+          },
+        ),
       ),
     );
   }

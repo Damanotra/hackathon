@@ -38,7 +38,7 @@ class S2TBloc extends Bloc<S2TEvent,S2TState>{
       if (await file.exists()) {
         yield state.ready(voiceList, 0,file.path);
       }
-    } on Exception catch (err){
+    }  catch (err){
       yield state.error(err.toString());
     }
   }
@@ -62,6 +62,7 @@ class S2TBloc extends Bloc<S2TEvent,S2TState>{
   }
 
   Stream<S2TState> _mapSubmitEventToState(SubmitEvent event) async* {
+    print(event.annotation);
     yield state.loading();
     try{
       final  submitSuccess = await _api.annotateVoice(event.context,state.voiceList[state.voiceIndex],event.annotation);

@@ -64,17 +64,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Center(child: Text("Text to Speech")),
               ),
             ),
-            Container(
-              height: deviceHeight*0.2,
-              margin: EdgeInsets.symmetric(vertical: deviceHeight*0.01),
-              decoration: BoxDecoration(
-                  border: Border.all(
-                      color: Colors.green,
-                      width: 5
-                  ),
-                  borderRadius: BorderRadius.all(Radius.circular(15))
+            GestureDetector(
+              onTap: (){
+                Navigator.of(context).pushNamed('/validate', arguments: (Route<dynamic> route) => false);
+              },
+              child: Container(
+                height: deviceHeight*0.2,
+                margin: EdgeInsets.symmetric(vertical: deviceHeight*0.01),
+                decoration: BoxDecoration(
+                    border: Border.all(
+                        color: Colors.green,
+                        width: 5
+                    ),
+                    borderRadius: BorderRadius.all(Radius.circular(15))
+                ),
+                child: Center(child: Text("Validation")),
               ),
-              child: Center(child: Text("Validation")),
             ),
           ],
         ),

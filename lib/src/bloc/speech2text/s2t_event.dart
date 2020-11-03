@@ -19,7 +19,7 @@ class SkipEvent extends S2TEvent{
 
 class SubmitEvent extends S2TEvent{
   String annotation;
-  SubmitEvent({BuildContext context, String annotation}): super(context:context);
+  SubmitEvent({BuildContext context, @required this.annotation}): super(context:context);
   @override
   String toString() => "Submit Annotation";
 }

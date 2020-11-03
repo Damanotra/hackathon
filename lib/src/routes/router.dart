@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:hackathon/src/ui/screen/home.dart';
+import 'package:hackathon/src/ui/screen/login.dart';
 import 'package:hackathon/src/ui/screen/speech2text.dart';
 import 'package:hackathon/src/ui/screen/text2speech.dart';
+import 'package:hackathon/src/ui/screen/validate.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings){
     switch(settings.name){
       case '/':
+        return MaterialPageRoute(
+          builder: (_) => LoginScreen(),
+        );
+      case '/home':
         return MaterialPageRoute(
           builder: (_) => HomeScreen(),
         );
@@ -17,6 +23,10 @@ class AppRouter {
       case '/speech':
         return MaterialPageRoute(
             builder: (_) => Speech2Text()
+        );
+      case '/validate':
+        return MaterialPageRoute(
+            builder: (_) => ValidateScreen()
         );
     }
   }

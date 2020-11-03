@@ -45,6 +45,8 @@ dependencies:
   path: ^1.6.4
   flutter_dotenv: ^2.1.0
   audioplayers: ^0.16.2
+  shared_preferences: ^0.5.12+2
+
 
 dev_dependencies:
   flutter_test:
