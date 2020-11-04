@@ -1,9 +1,9 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:hackathon/locator.dart';
 import 'package:hackathon/src/resources/provider/api/base_api.dart';
 import 'package:hackathon/src/resources/provider/shared_preference.dart';
+import 'package:http/http.dart';
 
 class ActionAPI  extends BaseAPI {
   final _prefs = locator<Preference>();
@@ -104,5 +104,18 @@ class ActionAPI  extends BaseAPI {
     return responseMap['success'];
   }
 
+  Future<bool> annotateText(BuildContext context, String voicePath, String text) async {
+    final file = await MultipartFile.fromPath('audio', voicePath);
+    final encodedURL = Uri.encodeFull('$baseURL/annotate_text');
+    print(encodedURL);
+    final request = MultipartRequest('POST',Uri.parse(encodedURL));
+    request.fields['text'] = text;
+    request.files.add(file);
+    final response = await doMultipart(
+        request,
+        context);
+    print(response.toString());
+    return response['success'];
+  }
 
 }

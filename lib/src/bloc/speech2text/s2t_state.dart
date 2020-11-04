@@ -1,24 +1,35 @@
+import 'package:flutter/cupertino.dart';
+
 class S2TState{
   final List voiceList;
   final int voiceIndex;
   final String localVoicePath;
   final String errorMessage;
   final bool isLoading;
-  S2TState({this.voiceList, this.voiceIndex,this.localVoicePath, this.errorMessage, this.isLoading});
+  final bool isDone;
+  S2TState({
+    @required this.voiceList,
+    @required this.voiceIndex,
+    @required this.localVoicePath,
+    @required this.errorMessage,
+    @required this.isLoading,
+    this.isDone= false});
 
   S2TState copyWith({
     List voiceList,
     int voiceIndex,
     String localVoicePath,
     String errorMessage,
-    bool isLoading
+    bool isLoading,
+    isDone
   }) {
     return S2TState(
       voiceList: voiceList ?? this.voiceList,
       voiceIndex: voiceIndex ?? this.voiceIndex,
       localVoicePath: localVoicePath ?? this.localVoicePath,
       errorMessage: errorMessage ?? this.errorMessage,
-      isLoading: isLoading ?? this.isLoading
+      isLoading: isLoading ?? this.isLoading,
+      isDone : isDone ?? isDone
     );
   }
 
@@ -29,6 +40,7 @@ class S2TState{
       localVoicePath:'',
       isLoading: true,
       errorMessage: null,
+      isDone: false
     );
   }
 
@@ -38,7 +50,7 @@ class S2TState{
       voiceIndex: voiceIndex,
       localVoicePath: localVoicePath,
       errorMessage: null,
-      isLoading:false
+      isLoading:false,
     );
   }
 
@@ -53,6 +65,13 @@ class S2TState{
     return copyWith(
       isLoading: false,
       errorMessage: errorMessage
+    );
+  }
+  S2TState done(){
+    return copyWith(
+      isLoading: false,
+      errorMessage: null,
+      isDone: true
     );
   }
 }

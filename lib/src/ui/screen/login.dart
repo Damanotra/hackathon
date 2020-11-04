@@ -21,6 +21,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
+  void initState() {
+    _loginBloc.add(InitialLoginEvent());
+    super.initState();
+  }
+
+
+  @override
   Widget build(BuildContext context) {
     final deviceWidth = MediaQuery.of(context).size.width;
     final deviceHeight = MediaQuery.of(context).size.height;
@@ -60,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextFormField(
                         controller: _passwordController,
                         decoration: InputDecoration(
-                            hintText: "Email",
+                            hintText: "Password",
                             border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(0))),
                       ),

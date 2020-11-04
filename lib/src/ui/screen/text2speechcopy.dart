@@ -3,23 +3,25 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data' show Uint8List;
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hackathon/src/bloc/speech2text/s2t_bloc.dart';
-import 'package:hackathon/src/bloc/speech2text/s2t_event.dart';
-import 'package:hackathon/src/bloc/speech2text/s2t_state.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 const int SAMPLE_RATE = 8000;
 const int BLOCK_SIZE = 4096;
 
+
 enum Media {
   file,
+  buffer,
   asset,
+  stream,
   remoteExampleFile,
 }
+
 enum AudioState {
   isPlaying,
   isPaused,
@@ -35,14 +37,13 @@ final exampleAudioFilePathOPUS =
 final albumArtPath =
     "https://file-examples-com.github.io/uploads/2017/10/file_example_PNG_500kB.png";
 
-class Speech2Text extends StatefulWidget {
+class Text2Speech extends StatefulWidget {
   @override
-  _Speech2TextState createState() => _Speech2TextState();
+  _Text2SpeechState createState() => _Text2SpeechState();
 }
 
-class _Speech2TextState extends State<Speech2Text> {
-  final _s2tBloc = S2TBloc();
-  final _annotationController = TextEditingController();
+class _Text2SpeechState extends State<Text2Speech> {
+  bool _isRecording = false;
   List<String> _path = [
     null,
     null,
@@ -59,17 +60,26 @@ class _Speech2TextState extends State<Speech2Text> {
     null,
     null,
   ];
+  StreamSubscription _recorderSubscription;
   StreamSubscription _playerSubscription;
+  StreamSubscription _recordingDataSubscription;
 
   FlutterSoundPlayer playerModule = FlutterSoundPlayer();
+  FlutterSoundRecorder recorderModule = FlutterSoundRecorder();
+
+  String _recorderTxt = '00:00:00';
   String _playerTxt = '00:00:00';
+  double _dbLevel;
 
   double sliderCurrentPosition = 0.0;
   double maxDuration = 1.0;
   Media _media = Media.file;
   Codec _codec = Codec.pcm16WAV;
+
+  bool _encoderSupported = true; // Optimist
   bool _decoderSupported = true; // Optimist
-  String voicepath;
+
+
 
   // Whether the user wants to use the audio player features
   bool _isAudioPlayer = false;
@@ -88,13 +98,19 @@ class _Speech2TextState extends State<Speech2Text> {
         mode: SessionMode.modeDefault,
         device: AudioDevice.speaker);
     await playerModule.setSubscriptionDuration(Duration(milliseconds: 10));
+    await recorderModule.setSubscriptionDuration(Duration(milliseconds: 10));
     initializeDateFormatting();
     await setCodec(_codec);
   }
 
-
   Future<void> init() async {
+    await recorderModule.openAudioSession(
+        focus: AudioFocus.requestFocusAndStopOthers,
+        category: SessionCategory.playAndRecord,
+        mode: SessionMode.modeDefault,
+        device: AudioDevice.speaker);
     await _initializeExample(false);
+
     if (Platform.isAndroid) {
       await copyAssets();
     }
@@ -112,9 +128,15 @@ class _Speech2TextState extends State<Speech2Text> {
 
   @override
   void initState() {
-    _s2tBloc.add(InitialS2TEvent());
     super.initState();
     init();
+  }
+
+  void cancelRecorderSubscriptions() {
+    if (_recorderSubscription != null) {
+      _recorderSubscription.cancel();
+      _recorderSubscription = null;
+    }
   }
 
   void cancelPlayerSubscriptions() {
@@ -124,26 +146,110 @@ class _Speech2TextState extends State<Speech2Text> {
     }
   }
 
+  void cancelRecordingDataSubscription() {
+    if (_recordingDataSubscription != null) {
+      _recordingDataSubscription.cancel();
+      _recordingDataSubscription = null;
+    }
+    recordingDataController = null;
+    if (sink != null) {
+      sink.close();
+      sink = null;
+    }
+  }
+
   @override
   void dispose() {
     super.dispose();
     cancelPlayerSubscriptions();
+    cancelRecorderSubscriptions();
+    cancelRecordingDataSubscription();
     releaseFlauto();
   }
 
   Future<void> releaseFlauto() async {
     try {
       await playerModule.closeAudioSession();
+      await recorderModule.closeAudioSession();
     } catch (e) {
       print('Released unsuccessful');
       print(e);
     }
   }
 
+  void startRecorder() async {
+    try {
+      // Request Microphone permission if needed
+      PermissionStatus status = await Permission.microphone.request();
+      if (status != PermissionStatus.granted) {
+        throw RecordingPermissionException("Microphone permission not granted");
+      }
+      PermissionStatus storagePermission = await Permission.storage.request();
+      if(storagePermission!=PermissionStatus.granted){
+        throw RecordingPermissionException("Storage permission not granted");
+      }
+
+
+      //preparing path
+//      Directory tempDir = await getTemporaryDirectory();
+      Directory permDir = await getExternalStorageDirectory();
+
+      String path =
+          '${permDir.path}/flutter_sound${ext[_codec.index]}';
+//            '/infidea/flutter_sound${ext[_codec.index]}';
+      print(path);
+      if (_media != Media.stream) {
+        await recorderModule.startRecorder(
+          toFile: path,
+          codec: _codec,
+          bitRate: 8000,
+          numChannels: 1,
+          sampleRate: SAMPLE_RATE,
+        );
+      }
+      print('startRecorder');
+
+      //prepare listener
+      _recorderSubscription = recorderModule.onProgress.listen((e) {
+        if (e != null && e.duration != null) {
+          DateTime date = new DateTime.fromMillisecondsSinceEpoch(
+              e.duration.inMilliseconds,
+              isUtc: true);
+          String txt = DateFormat('mm:ss:SS', 'en_GB').format(date);
+
+          this.setState(() {
+            _recorderTxt = txt.substring(0, 8);
+            _dbLevel = e.decibels;
+          });
+        }
+      });
+      //start listening
+      this.setState(() {
+        this._isRecording = true;
+        this._path[_codec.index] = path;
+      });
+    } catch (err) {
+      print('startRecorder error: $err');
+      setState(() {
+        stopRecorder();
+        this._isRecording = false;
+        cancelRecordingDataSubscription();
+        cancelRecorderSubscriptions();
+      });
+    }
+  }
 
   Future<void> getDuration() async {
     switch (_media) {
       case Media.file:
+      case Media.buffer:
+        Duration d =
+        await flutterSoundHelper.duration(this._path[_codec.index]);
+        _duration = d != null ? d.inMilliseconds / 1000.0 : null;
+        break;
+      case Media.asset:
+        _duration = null;
+        break;
       case Media.remoteExampleFile:
         _duration = null;
         break;
@@ -151,7 +257,20 @@ class _Speech2TextState extends State<Speech2Text> {
     setState(() {});
   }
 
-
+  void stopRecorder() async {
+    try {
+      await recorderModule.stopRecorder();
+      print('stopRecorder');
+      cancelRecorderSubscriptions();
+      cancelRecordingDataSubscription();
+      getDuration();
+    } catch (err) {
+      print('stopRecorder error: $err');
+    }
+    this.setState(() {
+      this._isRecording = false;
+    });
+  }
 
   Future<bool> fileExists(String path) async {
     return await File(path).exists();
@@ -232,22 +351,49 @@ class _Speech2TextState extends State<Speech2Text> {
 
   Future<void> startPlayer() async {
     try {
+      Uint8List dataBuffer;
       String audioFilePath;
       Codec codec = _codec;
-      if (_media == Media.file) {
-//          audioFilePath = localFilePath;
-          audioFilePath = voicepath;
-          print(audioFilePath);
+      if (_media == Media.file || _media == Media.stream) {
+        // Do we want to play from buffer or from file ?
+        if (await fileExists(_path[codec.index]))
+          audioFilePath = this._path[codec.index];
       }
-      if (audioFilePath != null) {
-        await playerModule.startPlayer(
-            fromURI: audioFilePath,
-            codec: codec,
-            sampleRate:  SAMPLE_RATE,
-            whenFinished: () {
-              print('Play finished');
-              setState(() {});
-            });
+
+      // Check whether the user wants to use the audio player features
+      if (_isAudioPlayer) {
+      } else
+      if (_media == Media.stream){
+
+      } else {
+        if (audioFilePath != null) {
+          await playerModule.startPlayer(
+              fromURI: audioFilePath,
+              codec: codec,
+              sampleRate:  SAMPLE_RATE,
+              whenFinished: () {
+                print('Play finished');
+                setState(() {});
+              });
+        } else if (dataBuffer != null) {
+          if (codec == Codec.pcm16) {
+            dataBuffer = await flutterSoundHelper.pcmToWaveBuffer(
+              inputBuffer: dataBuffer,
+              numChannels: 1,
+              sampleRate: (_codec == Codec.pcm16 && _media == Media.asset)? 48000 : SAMPLE_RATE,
+            );
+            codec = Codec.pcm16WAV;
+          }
+          await playerModule.startPlayer(
+              fromDataBuffer: dataBuffer,
+              sampleRate:   SAMPLE_RATE,
+
+              codec: codec,
+              whenFinished: () {
+                print('Play finished');
+                setState(() {});
+              });
+        }
       }
       _addListeners();
       setState(() {});
@@ -285,6 +431,17 @@ class _Speech2TextState extends State<Speech2Text> {
     });
   }
 
+  void pauseResumeRecorder() async {
+    if (recorderModule.isPaused) {
+      await recorderModule.resumeRecorder();
+    } else {
+      await recorderModule.pauseRecorder();
+      assert(recorderModule.isPaused);
+    }
+    setState(() {
+
+    });
+  }
 
   void seekToPlayer(int milliSecs) async {
     print('-->seekToPlayer');
@@ -303,6 +460,13 @@ class _Speech2TextState extends State<Speech2Text> {
     return null;
   }
 
+  void Function() onPauseResumeRecorderPressed() {
+    if (recorderModule == null) return null;
+    if (recorderModule.isPaused || recorderModule.isRecording) {
+      return pauseResumeRecorder;
+    }
+    return null;
+  }
 
   void Function() onStopPlayerPressed() {
     if (playerModule == null) return null;
@@ -313,18 +477,43 @@ class _Speech2TextState extends State<Speech2Text> {
 
   void Function() onStartPlayerPressed() {
     if (playerModule == null) return null;
-    if (_media == Media.file ) {
-      return (playerModule.isStopped) ? startPlayer : null;
+    if (_media == Media.file || _media == Media.stream ||
+        _media == Media.buffer) // A file must be already recorded to play it
+        {
+      if (_path[_codec.index] == null) return null;
     }
 
     // Disable the button if the selected codec is not supported
-//    if (!(_decoderSupported || _codec == Codec.pcm16))
-//      return null;
+    if (!(_decoderSupported || _codec == Codec.pcm16))
+      return null;
 
     return (playerModule.isStopped) ? startPlayer : null;
   }
 
+  void startStopRecorder() {
+    if (recorderModule.isRecording || recorderModule.isPaused)
+      stopRecorder();
+    else
+      startRecorder();
+  }
+
+  void Function() onStartRecorderPressed() {
+    // Disable the button if the selected codec is not supported
+    if (recorderModule == null || !_encoderSupported) return null;
+    if (_media == Media.stream && _codec != Codec.pcm16) return null;
+    return startStopRecorder;
+  }
+
+  AssetImage recorderAssetImage() {
+    if (onStartRecorderPressed() == null)
+      return AssetImage('res/icons/ic_mic_disabled.png');
+    return (recorderModule.isStopped)
+        ? AssetImage('res/icons/ic_mic.png')
+        : AssetImage('res/icons/ic_stop.png');
+  }
+
   void setCodec(Codec codec) async {
+    _encoderSupported = await recorderModule.isEncoderSupported(codec);
     _decoderSupported = await playerModule.isDecoderSupported(codec);
 
     setState(() {
@@ -332,89 +521,70 @@ class _Speech2TextState extends State<Speech2Text> {
     });
   }
 
-//  void Function(bool) audioPlayerSwitchChanged() {
-//    if (!playerModule.isStopped) return null;
-//    return ((newVal) async {
-//      try {
-//        await _initializeExample(newVal);
-//        setState(() {});
-//      } catch (err) {
-//        print(err);
-//      }
-//    });
-//  }
+
+
 
   @override
   Widget build(BuildContext context) {
-    final deviceWidth = MediaQuery.of(context).size.width;
-    final deviceHeight = MediaQuery.of(context).size.height;
-    final playerControls = Row(
-      children: <Widget>[
-        Container(
-          width: 56.0,
-          height: 56.0,
-          child: ClipOval(
-            child: FlatButton(
-              onPressed: onStartPlayerPressed(),
-              padding: EdgeInsets.all(8.0),
-              child: Image(
-                image: AssetImage(onStartPlayerPressed() != null
-                    ? 'res/icons/ic_play.png'
-                    : 'res/icons/ic_play_disabled.png'),
-              ),
-            ),
-          ),
-        ),
-        Container(
-          width: 56.0,
-          height: 56.0,
-          child: ClipOval(
-            child: FlatButton(
-              onPressed: onPauseResumePlayerPressed(),
-              padding: EdgeInsets.all(8.0),
-              child: Image(
-                width: 36.0,
-                height: 36.0,
-                image: AssetImage(onPauseResumePlayerPressed() != null
-                    ? 'res/icons/ic_pause.png'
-                    : 'res/icons/ic_pause_disabled.png'),
-              ),
-            ),
-          ),
-        ),
-        Container(
-          width: 56.0,
-          height: 56.0,
-          child: ClipOval(
-            child: FlatButton(
-              onPressed: onStopPlayerPressed(),
-              padding: EdgeInsets.all(8.0),
-              child: Image(
-                width: 28.0,
-                height: 28.0,
-                image: AssetImage(onStopPlayerPressed() != null
-                    ? 'res/icons/ic_stop.png'
-                    : 'res/icons/ic_stop_disabled.png'),
-              ),
-            ),
-          ),
-        ),
-      ],
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-    );
-    final playerSlider = Container(
-        height: 56.0,
-        child: Slider(
-            value: min(sliderCurrentPosition, maxDuration),
-            min: 0.0,
-            max: maxDuration,
-            onChanged: (double value) async {
-              await seekToPlayer( value.toInt());
-            },
-            divisions: maxDuration == 0.0 ? 1 : maxDuration.toInt()));
 
-
+    Widget recorderSection = Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Container(
+            margin: EdgeInsets.only(top: 12.0, bottom: 16.0),
+            child: Text(
+              this._recorderTxt,
+              style: TextStyle(
+                fontSize: 35.0,
+                color: Colors.black,
+              ),
+            ),
+          ),
+          _isRecording
+              ? LinearProgressIndicator(
+              value: 100.0 / 160.0 * (this._dbLevel ?? 1) / 100,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+              backgroundColor: Colors.red)
+              : Container(),
+          Row(
+            children: <Widget>[
+              Container(
+                width: 56.0,
+                height: 50.0,
+                child: ClipOval(
+                  child: FlatButton(
+                    onPressed: onStartRecorderPressed(),
+                    padding: EdgeInsets.all(8.0),
+                    child: Image(
+                      image: recorderAssetImage(),
+                    ),
+                  ),
+                ),
+              ),
+              Container(
+                width: 56.0,
+                height: 50.0,
+                child: ClipOval(
+                  child: FlatButton(
+                    onPressed: onPauseResumeRecorderPressed(),
+                    disabledColor: Colors.white,
+                    padding: EdgeInsets.all(8.0),
+                    child: Image(
+                      width: 36.0,
+                      height: 36.0,
+                      image: AssetImage(onPauseResumeRecorderPressed() != null
+                          ? 'res/icons/ic_pause.png'
+                          : 'res/icons/ic_pause_disabled.png'),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+          ),
+        ]);
 
     Widget playerSection = Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -504,91 +674,56 @@ class _Speech2TextState extends State<Speech2Text> {
         ),
       ],
     );
-
-    return  Scaffold(
+    double deviceWidth = MediaQuery.of(context).size.width;
+    double deviceHeight = MediaQuery.of(context).size.height;
+    return Scaffold(
       appBar: AppBar(
-        title: const Text('Flutter Sound Demo'),
-
+        title: Text("Appbar"),
       ),
-      body: BlocListener<S2TBloc,S2TState>(
-        cubit: _s2tBloc,
-        listener: (context, state) {
-          if(state.isDone!=null){
-            if(state.isDone){
-              Navigator.pop(context);
-            }
-          }
-        },
-        child: BlocBuilder<S2TBloc,S2TState>(
-          cubit: _s2tBloc,
-          builder: (context, state) {
-            if (!state.isLoading) {
-              if(state.errorMessage==null){
-                voicepath = state.localVoicePath;
-                print(voicepath);
-                return ListView(children: <Widget>[
-                  playerSection,
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
-                    child: TextField(
-                      controller: _annotationController,
-                      keyboardType: TextInputType.multiline,
-                      maxLines: null,
-                      decoration: InputDecoration(
-                          hintText: "Masukan kalimat yang kamu dengar",
-                          //                contentPadding: EdgeInsets.fromLTRB(15, 12, 15, 12),
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(0))),
-                    ),
-                  ),
-                  SizedBox(height: deviceHeight * 0.07),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _s2tBloc.add(SubmitEvent(
-                          annotation: _annotationController.text,
-                          context: context
-                        ));
-                      },
-                      style: ElevatedButton.styleFrom(
-                          primary: Colors.orange,
-                          padding:
-                          EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                          textStyle: TextStyle()),
-                      child: Text("Submit"),
-                    ),
-                  ),
-                  SizedBox(
-                    height: deviceHeight * 0.02,
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _s2tBloc.add(SkipEvent());
-                      },
-                      style: ElevatedButton.styleFrom(
-                          primary: Colors.orange,
-                          padding:
-                          EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                          textStyle: TextStyle()),
-                      child: Text("Skip"),
-                    ),
-                  )
-                  // ignore: missing_return
-                ]);
-              }
-              else{
-                return Text(state.errorMessage);
-              }
-            }
-            else {
-              return CircularProgressIndicator();
-            }
-          },
-        ),
+      body: ListView(
+        children: <Widget>[
+          SizedBox(height: deviceHeight*0.05),
+          Center(
+            child: Text(
+              '"Sample Text"',
+              style: TextStyle(fontSize: 20),
+            )
+          ),
+          SizedBox(height: deviceHeight*0.02),
+          recorderSection,
+          playerSection,
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
+            child: ElevatedButton(
+              onPressed: (){
+
+              },
+              style: ElevatedButton.styleFrom(
+                  primary: Colors.orange,
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  textStyle: TextStyle()
+              ),
+              child: Text("Submit"),
+            ),
+          ),
+          SizedBox(height: deviceHeight*0.02,),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
+            child: ElevatedButton(
+              onPressed: (){
+
+              },
+              style: ElevatedButton.styleFrom(
+                  primary: Colors.orange,
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  textStyle: TextStyle()
+              ),
+              child: Text("Skip"),
+            ),
+          )
+        ],
       ),
     );
   }
 }
+

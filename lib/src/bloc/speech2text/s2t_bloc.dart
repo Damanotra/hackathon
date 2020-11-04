@@ -46,15 +46,19 @@ class S2TBloc extends Bloc<S2TEvent,S2TState>{
   Stream<S2TState> _mapSkipEventToState(SkipEvent event) async* {
     yield state.loading();
     try{
-      final voiceIndex = state.voiceIndex+1;
-      print("http://5.189.150.137:5000/download_audio/${state.voiceList[voiceIndex]}");
-      final bytes = await readBytes("http://5.189.150.137:5000/download_audio/${state.voiceList[0]}");
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/audio.wav');
-      print("bytes downloaded");
-      await file.writeAsBytes(bytes);
-      if (await file.exists()) {
-        yield state.ready(state.voiceList,voiceIndex,file.path);
+      if(state.voiceIndex == state.voiceList.length-1){
+        yield state.done();
+      } else{
+        final voiceIndex = state.voiceIndex+1;
+        print("http://5.189.150.137:5000/download_audio/${state.voiceList[voiceIndex]}");
+        final bytes = await readBytes("http://5.189.150.137:5000/download_audio/${state.voiceList[0]}");
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/audio.wav');
+        print("bytes downloaded");
+        await file.writeAsBytes(bytes);
+        if (await file.exists()) {
+          yield state.ready(state.voiceList,voiceIndex,file.path);
+        }
       }
     } catch(err){
       yield state.error(err.toString());
@@ -67,16 +71,20 @@ class S2TBloc extends Bloc<S2TEvent,S2TState>{
     try{
       final  submitSuccess = await _api.annotateVoice(event.context,state.voiceList[state.voiceIndex],event.annotation);
       print(submitSuccess);
-      //next index in the list
-      final voiceIndex = state.voiceIndex+1;
-      print("http://5.189.150.137:5000/download_audio/${state.voiceList[voiceIndex]}");
-      final bytes = await readBytes("http://5.189.150.137:5000/download_audio/${state.voiceList[0]}");
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/audio.wav');
-      print("bytes downloaded");
-      await file.writeAsBytes(bytes);
-      if (await file.exists()) {
-        yield state.ready(state.voiceList,voiceIndex,file.path);
+      if(state.voiceIndex == state.voiceList.length-1){
+        yield state.done();
+      } else{
+        //next index in the list
+        final voiceIndex = state.voiceIndex+1;
+        print("http://5.189.150.137:5000/download_audio/${state.voiceList[voiceIndex]}");
+        final bytes = await readBytes("http://5.189.150.137:5000/download_audio/${state.voiceList[0]}");
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/audio.wav');
+        print("bytes downloaded");
+        await file.writeAsBytes(bytes);
+        if (await file.exists()) {
+          yield state.ready(state.voiceList,voiceIndex,file.path);
+        }
       }
     } catch(err){
       yield state.error(err.toString());

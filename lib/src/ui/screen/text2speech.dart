@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hackathon/src/bloc/text2speech/t2s_bloc.dart';
+import 'package:hackathon/src/bloc/text2speech/t2s_event.dart';
+import 'package:hackathon/src/bloc/text2speech/t2s_state.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -43,6 +47,10 @@ class Text2Speech extends StatefulWidget {
 }
 
 class _Text2SpeechState extends State<Text2Speech> {
+  //bloc thing
+  final _t2sBloc = T2SBloc();
+
+
   bool _isRecording = false;
   List<String> _path = [
     null,
@@ -128,6 +136,7 @@ class _Text2SpeechState extends State<Text2Speech> {
 
   @override
   void initState() {
+    _t2sBloc.add(InitialT2SEvent());
     super.initState();
     init();
   }
@@ -184,6 +193,10 @@ class _Text2SpeechState extends State<Text2Speech> {
       if (status != PermissionStatus.granted) {
         throw RecordingPermissionException("Microphone permission not granted");
       }
+      PermissionStatus storagePermission = await Permission.storage.request();
+      if(storagePermission!=PermissionStatus.granted){
+        throw RecordingPermissionException("Storage permission not granted");
+      }
 
 
       //preparing path
@@ -194,25 +207,7 @@ class _Text2SpeechState extends State<Text2Speech> {
           '${permDir.path}/flutter_sound${ext[_codec.index]}';
 //            '/infidea/flutter_sound${ext[_codec.index]}';
       print(path);
-      if (_media == Media.stream) {
-        assert(_codec == Codec.pcm16);
-        File outputFile = File(path);
-        if (outputFile.existsSync())
-          await outputFile.delete();
-        sink = outputFile.openWrite();
-        recordingDataController = StreamController<Food>();
-        _recordingDataSubscription =
-            recordingDataController.stream.listen((Food buffer) {
-              if (buffer is FoodData)
-                sink.add(buffer.data);
-            });
-        await recorderModule.startRecorder(
-          toStream: recordingDataController.sink,
-          codec: _codec,
-          numChannels: 1,
-          sampleRate: SAMPLE_RATE,
-        );
-      } else {
+      if (_media != Media.stream) {
         await recorderModule.startRecorder(
           toFile: path,
           codec: _codec,
@@ -368,84 +363,19 @@ class _Text2SpeechState extends State<Text2Speech> {
       Uint8List dataBuffer;
       String audioFilePath;
       Codec codec = _codec;
-      if (_media == Media.asset) {
-        dataBuffer = (await rootBundle.load(assetSample[codec.index]))
-            .buffer
-            .asUint8List();
-      } else if (_media == Media.file || _media == Media.stream) {
+      if (_media == Media.file || _media == Media.stream) {
         // Do we want to play from buffer or from file ?
         if (await fileExists(_path[codec.index]))
           audioFilePath = this._path[codec.index];
-      } else if (_media == Media.buffer) {
-        // Do we want to play from buffer or from file ?
-        if (await fileExists(_path[codec.index])) {
-          dataBuffer = await makeBuffer(this._path[codec.index]);
-          if (dataBuffer == null) {
-            throw Exception('Unable to create the buffer');
-          }
-        }
       }
 
       // Check whether the user wants to use the audio player features
       if (_isAudioPlayer) {
-        String albumArtUrl;
-        String albumArtAsset;
-        String albumArtFile;
-        if (_media == Media.remoteExampleFile)
-          albumArtUrl = albumArtPath;
-        else {
-          albumArtFile =
-              await playerModule.getResourcePath() + "/assets/canardo.png";
-          print(albumArtFile);
-        }
-
-        final track = Track(
-          trackPath: audioFilePath,
-          codec: _codec,
-          dataBuffer: dataBuffer,
-          trackTitle: "This is a record",
-          trackAuthor: "from flutter_sound",
-          albumArtUrl: albumArtUrl,
-          albumArtAsset: albumArtAsset,
-          albumArtFile: albumArtFile,
-        );
-        await playerModule.startPlayerFromTrack(track,
-            defaultPauseResume: false,
-            removeUIWhenStopped: true,
-            whenFinished: () {
-              print('I hope you enjoyed listening to this song');
-              setState(() {});
-            }, onSkipBackward: () {
-              print('Skip backward');
-              stopPlayer();
-              startPlayer();
-            }, onSkipForward: () {
-              print('Skip forward');
-              stopPlayer();
-              startPlayer();
-            }, onPaused: (bool b) {
-              if (b)
-                playerModule.pausePlayer();
-              else
-                playerModule.resumePlayer();
-            });
       } else
       if (_media == Media.stream){
-        await playerModule.startPlayerFromStream(
-          codec: _codec,
-          numChannels: 1,
-          sampleRate: SAMPLE_RATE,
-        );
-        _addListeners();
-        setState(() {});
-        await feedHim(audioFilePath);
-        //await finishPlayer();
-        await stopPlayer();
-        return;
 
       } else {
         if (audioFilePath != null) {
-
           await playerModule.startPlayer(
               fromURI: audioFilePath,
               codec: codec,
@@ -529,137 +459,7 @@ class _Text2SpeechState extends State<Text2Speech> {
     print('<--seekToPlayer');
   }
 
-  Widget makeDropdowns(BuildContext context) {
-    final mediaDropdown = Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.only(right: 16.0),
-          child: Text('Media:'),
-        ),
-        DropdownButton<Media>(
-          value: _media,
-          onChanged: (newMedia) {
-            _media = newMedia;
-            getDuration();
-            setState(() {});
-          },
-          items: <DropdownMenuItem<Media>>[
-            DropdownMenuItem<Media>(
-              value: Media.file,
-              child: Text('File'),
-            ),
-            DropdownMenuItem<Media>(
-              value: Media.buffer,
-              child: Text('Buffer'),
-            ),
-            DropdownMenuItem<Media>(
-              value: Media.asset,
-              child: Text('Asset'),
-            ),
-            DropdownMenuItem<Media>(
-              value: Media.remoteExampleFile,
-              child: Text('Remote Example File'),
-            ),
-            DropdownMenuItem<Media>(
-              value: Media.stream,
-              child: Text('Dart Stream'),
-            ),
-          ],
-        ),
-      ],
-    );
 
-    final codecDropdown = Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.only(right: 16.0),
-          child: Text('Codec:'),
-        ),
-        DropdownButton<Codec>(
-          value: _codec,
-          onChanged: (newCodec) {
-            setCodec(newCodec);
-            _codec = newCodec;
-            getDuration();
-            setState(() {});
-          },
-          items: <DropdownMenuItem<Codec>>[
-            DropdownMenuItem<Codec>(
-              value: Codec.aacADTS,
-              child: Text('AAC/ADTS'),
-            ),
-            DropdownMenuItem<Codec>(
-              value: Codec.opusOGG,
-              child: Text('Opus/OGG'),
-            ),
-            DropdownMenuItem<Codec>(
-              value: Codec.opusCAF,
-              child: Text('Opus/CAF'),
-            ),
-            DropdownMenuItem<Codec>(
-              value: Codec.mp3,
-              child: Text('MP3'),
-            ),
-            DropdownMenuItem<Codec>(
-              value: Codec.vorbisOGG,
-              child: Text('Vorbis/OGG'),
-            ),
-            DropdownMenuItem<Codec>(
-              value: Codec.pcm16,
-              child: Text('PCM16'),
-            ),
-            DropdownMenuItem<Codec>(
-              value: Codec.pcm16WAV,
-              child: Text('PCM16/WAV'),
-            ),
-            DropdownMenuItem<Codec>(
-              value: Codec.pcm16AIFF,
-              child: Text('PCM16/AIFF'),
-            ),
-            DropdownMenuItem<Codec>(
-              value: Codec.pcm16CAF,
-              child: Text('PCM16/CAF'),
-            ),
-            DropdownMenuItem<Codec>(
-              value: Codec.flac,
-              child: Text('FLAC'),
-            ),
-            DropdownMenuItem<Codec>(
-              value: Codec.aacMP4,
-              child: Text('AAC/MP4'),
-            ),
-            DropdownMenuItem<Codec>(
-              value: Codec.amrNB,
-              child: Text('AMR-NB'),
-            ),
-            DropdownMenuItem<Codec>(
-              value: Codec.amrWB,
-              child: Text('AMR-WB'),
-            ),
-          ],
-        ),
-      ],
-    );
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16.0),
-            child: mediaDropdown,
-          ),
-          codecDropdown,
-        ],
-      ),
-    );
-  }
 
   void Function() onPauseResumePlayerPressed() {
     if (playerModule == null) return null;
@@ -691,14 +491,6 @@ class _Text2SpeechState extends State<Text2Speech> {
         {
       if (_path[_codec.index] == null) return null;
     }
-    if (_media == Media.remoteExampleFile && !(_codec == Codec.mp3 || _codec == Codec.opusOGG) )// in this example we use just a remote mp3 or upus file
-      return null;
-
-    if (_media == Media.stream && _codec != Codec.pcm16)
-      return null;
-
-    if (_media == Media.stream && _isAudioPlayer )
-      return null;
 
     // Disable the button if the selected codec is not supported
     if (!(_decoderSupported || _codec == Codec.pcm16))
@@ -735,18 +527,6 @@ class _Text2SpeechState extends State<Text2Speech> {
 
     setState(() {
       _codec = codec;
-    });
-  }
-
-  void Function(bool) audioPlayerSwitchChanged() {
-    if ((!playerModule.isStopped) || (!recorderModule.isStopped)) return null;
-    return ((newVal) async {
-      try {
-        await _initializeExample(newVal);
-        setState(() {});
-      } catch (err) {
-        print(err);
-      }
     });
   }
 
@@ -909,49 +689,70 @@ class _Text2SpeechState extends State<Text2Speech> {
       appBar: AppBar(
         title: Text("Appbar"),
       ),
-      body: ListView(
-        children: <Widget>[
-          SizedBox(height: deviceHeight*0.05),
-          Center(
-            child: Text(
-              '"Sample Text"',
-              style: TextStyle(fontSize: 20),
-            )
-          ),
-          SizedBox(height: deviceHeight*0.02),
-          recorderSection,
-          playerSection,
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
-            child: ElevatedButton(
-              onPressed: (){
+      body: BlocListener<T2SBloc,T2SState>(
+        cubit: _t2sBloc,
+        listener: (context,state){
+          if(state.isDone!=null){
+            if(state.isDone){
+              Navigator.pop(context);
+            }
+          }
+        },
+        child: BlocBuilder<T2SBloc,T2SState>(
+          cubit: _t2sBloc,
+          builder: (context,state){
+            if(state.isLoading){
+              return CircularProgressIndicator();
+            } else if(state.errorMessage==null){
+              return ListView(
+                children: <Widget>[
+                  SizedBox(height: deviceHeight*0.05),
+                  Center(
+                      child: Text(
+                        '"${state.textList[state.textIndex]}"',
+                        style: TextStyle(fontSize: 20),
+                      )
+                  ),
+                  SizedBox(height: deviceHeight*0.02),
+                  recorderSection,
+                  playerSection,
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
+                    child: ElevatedButton(
+                      onPressed: (){
 
-              },
-              style: ElevatedButton.styleFrom(
-                  primary: Colors.orange,
-                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                  textStyle: TextStyle()
-              ),
-              child: Text("Submit"),
-            ),
-          ),
-          SizedBox(height: deviceHeight*0.02,),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
-            child: ElevatedButton(
-              onPressed: (){
-
-              },
-              style: ElevatedButton.styleFrom(
-                  primary: Colors.orange,
-                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                  textStyle: TextStyle()
-              ),
-              child: Text("Skip"),
-            ),
-          )
-        ],
-      ),
+                      },
+                      style: ElevatedButton.styleFrom(
+                          primary: Colors.orange,
+                          padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                          textStyle: TextStyle()
+                      ),
+                      child: Text("Submit"),
+                    ),
+                  ),
+                  SizedBox(height: deviceHeight*0.02,),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
+                    child: ElevatedButton(
+                      onPressed: (){
+                        _t2sBloc.add(SkipEvent());
+                      },
+                      style: ElevatedButton.styleFrom(
+                          primary: Colors.orange,
+                          padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                          textStyle: TextStyle()
+                      ),
+                      child: Text("Skip"),
+                    ),
+                  )
+                ],
+              );
+            } else{
+              return Text(state.errorMessage);
+            }
+          },
+        ),
+      )
     );
   }
 }
