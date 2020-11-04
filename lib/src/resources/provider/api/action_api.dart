@@ -7,7 +7,8 @@ import 'package:http/http.dart';
 
 class ActionAPI  extends BaseAPI {
   final _prefs = locator<Preference>();
-  Future<List<dynamic>> getVoices(BuildContext context) async {
+
+  Future<dynamic> getVoices(BuildContext context) async {
     final response = await doPost(
         'get_voice_skip_n',
         {
@@ -17,12 +18,12 @@ class ActionAPI  extends BaseAPI {
         },
         context);
     print(response.toString());
-    final result = List.from(response['voice_path']);
+    final result = response;
     print(result.length);
     return Future.value(result);
   }
 
-  Future<bool> annotateVoice(BuildContext context,String voicePath, String annotation) async {
+  Future<dynamic> annotateVoice(BuildContext context,String voicePath, String annotation) async {
     final response = await doPost(
         'annotate_voice',
         {
@@ -32,7 +33,7 @@ class ActionAPI  extends BaseAPI {
         },
         context);
     print(response.toString());
-    return response['success'];
+    return response;
   }
 
   Future<Map> signIn(BuildContext context,String email,String password) async {
@@ -90,7 +91,7 @@ class ActionAPI  extends BaseAPI {
     return response;
   }
 
-  Future<bool> validate(BuildContext context,bool validation, String v2tId) async{
+  Future<dynamic> validate(BuildContext context,bool validation, String v2tId) async{
     final response = await doPost(
         "validate_voice_to_text",
         {
@@ -99,12 +100,10 @@ class ActionAPI  extends BaseAPI {
           "is_correct":validation
         },
         context);
-
-    final responseMap = json.decode(response.body) as Map;
-    return responseMap['success'];
+    return response;
   }
 
-  Future<bool> annotateText(BuildContext context, String voicePath, String text) async {
+  Future<dynamic> annotateText(BuildContext context, String voicePath, String text) async {
     final file = await MultipartFile.fromPath('audio', voicePath);
     final encodedURL = Uri.encodeFull('$baseURL/annotate_text');
     print(encodedURL);
@@ -116,7 +115,20 @@ class ActionAPI  extends BaseAPI {
         request,
         context);
     print(response.toString());
-    return response['success'];
+    return response;
+  }
+
+  Future<dynamic> getTexts(BuildContext context) async {
+    final response = await doPost(
+        'get_text_skip_n',
+        {
+          "session_id":_prefs.getSessionId(),
+          "skip":0,
+          "limit":3
+        },
+        context);
+    print(response.toString());
+    return response;
   }
 
 }

@@ -28,15 +28,27 @@ class S2TBloc extends Bloc<S2TEvent,S2TState>{
   Stream<S2TState> _mapInitialS2TEventToState(InitialS2TEvent event) async* {
     yield state.loading();
     try {
-      final  voiceList = await _api.getVoices(event.context);
-      print("http://5.189.150.137:5000/download_audio/${voiceList[0]}");
-      final bytes = await readBytes("http://5.189.150.137:5000/download_audio/${voiceList[0]}");
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/audio.wav');
-      print("bytes downloaded");
-      await file.writeAsBytes(bytes);
-      if (await file.exists()) {
-        yield state.ready(voiceList, 0,file.path);
+      final response = await _api.getVoices(event.context);
+      if(response['note']!=null){
+        if(response['note']=="invalid session"){
+          print("session expired");
+          yield state.error("Session kadaluarsa, mohon restart app dan login ulang");
+        }
+        else {
+          yield state.error("terjadi kesalahan ${response['note']}");
+        }
+      }
+      else {
+        final  voiceList = response['voice_path'];
+        print("http://5.189.150.137:5000/download_audio/${voiceList[0]}");
+        final bytes = await readBytes("http://5.189.150.137:5000/download_audio/${voiceList[0]}");
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/audio.wav');
+        print("bytes downloaded");
+        await file.writeAsBytes(bytes);
+        if (await file.exists()) {
+          yield state.ready(voiceList, 0,file.path);
+        }
       }
     }  catch (err){
       yield state.error(err.toString());
@@ -69,23 +81,35 @@ class S2TBloc extends Bloc<S2TEvent,S2TState>{
     print(event.annotation);
     yield state.loading();
     try{
-      final  submitSuccess = await _api.annotateVoice(event.context,state.voiceList[state.voiceIndex],event.annotation);
-      print(submitSuccess);
-      if(state.voiceIndex == state.voiceList.length-1){
-        yield state.done();
-      } else{
-        //next index in the list
-        final voiceIndex = state.voiceIndex+1;
-        print("http://5.189.150.137:5000/download_audio/${state.voiceList[voiceIndex]}");
-        final bytes = await readBytes("http://5.189.150.137:5000/download_audio/${state.voiceList[0]}");
-        final dir = await getApplicationDocumentsDirectory();
-        final file = File('${dir.path}/audio.wav');
-        print("bytes downloaded");
-        await file.writeAsBytes(bytes);
-        if (await file.exists()) {
-          yield state.ready(state.voiceList,voiceIndex,file.path);
+      final response = await _api.annotateVoice(event.context,state.voiceList[state.voiceIndex],event.annotation);
+      if(response['note']!=null){
+        if(response['note']=="invalid session"){
+          print("session expired");
+          yield state.error("Session kadaluarsa, mohon restart app dan login ulang");
+        }
+        else {
+          yield state.error("terjadi kesalahan ${response['note']}");
+        }
+      } else {
+        final submitSuccess = response['success'];
+        print(submitSuccess);
+        if(state.voiceIndex == state.voiceList.length-1){
+          yield state.done();
+        } else{
+          //next index in the list
+          final voiceIndex = state.voiceIndex+1;
+          print("http://5.189.150.137:5000/download_audio/${state.voiceList[voiceIndex]}");
+          final bytes = await readBytes("http://5.189.150.137:5000/download_audio/${state.voiceList[0]}");
+          final dir = await getApplicationDocumentsDirectory();
+          final file = File('${dir.path}/audio.wav');
+          print("bytes downloaded");
+          await file.writeAsBytes(bytes);
+          if (await file.exists()) {
+            yield state.ready(state.voiceList,voiceIndex,file.path);
+          }
         }
       }
+
     } catch(err){
       yield state.error(err.toString());
     }

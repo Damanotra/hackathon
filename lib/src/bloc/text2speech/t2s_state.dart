@@ -32,9 +32,9 @@ class T2SState{
     );
   }
 
-  T2SState ready(textIndex){
+  T2SState ready(textList, textIndex){
     return copyWith(
-      textList: ['Coba Baca Ini','Pengen Makan Nasi'],
+      textList: textList,
       textIndex: textIndex,
       errorMessage: null,
       isLoading:false

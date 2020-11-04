@@ -28,8 +28,20 @@ class T2SBloc extends Bloc<T2SEvent,T2SState>{
   Stream<T2SState> _mapInitialT2SEventToState(InitialT2SEvent event) async* {
     yield state.loading();
     try {
-//      final  voiceList = await _api.getTexts(event.context);
-      yield state.ready(0);
+      final response = await _api.getTexts(event.context);
+      if(response['note']!=null){
+        if(response['note']=="invalid session"){
+          print("session expired");
+          yield state.error("Session kadaluarsa, mohon restart app dan login ulang");
+        }
+        else {
+          yield state.error("terjadi kesalahan ${response['note']}");
+        }
+      } else {
+        final  textList = response['text'];
+        print(textList);
+        yield state.ready(textList,0);
+      }
     }  catch (err){
       yield state.error(err.toString());
     }
@@ -42,9 +54,8 @@ class T2SBloc extends Bloc<T2SEvent,T2SState>{
         yield state.done();
       } else{
         final textIndex = state.textIndex+1;
-        yield state.ready(textIndex);
+        yield state.ready(state.textList, textIndex);
       }
-
     } catch(err){
       yield state.error(err.toString());
     }
@@ -54,7 +65,9 @@ class T2SBloc extends Bloc<T2SEvent,T2SState>{
     print(event.voicePath);
     yield state.loading();
     try{
-      final submitSuccess = await _api.annotateText(event.context,event.voicePath,event.text);
+      final response = await _api.annotateText(event.context,event.voicePath,event.text);
+      final submitSuccess = response['success'];
+
       print(submitSuccess);
       //check if done
       if(state.textIndex == state.textList.length-1){
@@ -62,7 +75,7 @@ class T2SBloc extends Bloc<T2SEvent,T2SState>{
       } else{
         //go to next index
         final textIndex = state.textIndex+1;
-        yield state.ready(textIndex);
+        yield state.ready(state.textList,textIndex);
       }
     } catch(err){
       yield state.error(err.toString());

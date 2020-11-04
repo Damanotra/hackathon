@@ -28,17 +28,30 @@ class ValidateBloc extends Bloc<ValidateEvent,ValidateState>{
   Stream<ValidateState> _mapInitialValidateEventToState(InitialValidateEvent event) async* {
     yield state.loading();
     try {
-      final responseMap = await _api.getVoiceAndText(event.context);
-      final voiceList = responseMap['data'];
-      final voicePath = voiceList[0]['voice_path'];
-      print("http://5.189.150.137:5000/download_audio/${voicePath}");
-      final bytes = await readBytes("http://5.189.150.137:5000/download_audio/${voicePath}");
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/audio.wav');
-      print("bytes downloaded");
-      await file.writeAsBytes(bytes);
-      if (await file.exists()) {
-        yield state.ready(voiceList, 0,file.path);
+      final response = await _api.getVoiceAndText(event.context);
+      if(response['note']!=null){
+        if(response['note']=="invalid session"){
+          print("session expired");
+          yield state.error("Session kadaluarsa, mohon restart app dan login ulang");
+        }
+        else {
+          yield state.error("terjadi kesalahan ${response['note']}");
+        }
+      } else {
+        final voiceList = response['data'] as List;
+        if(voiceList.length==0){
+
+        }
+        final voicePath = voiceList[0]['voice_path'];
+        print("http://5.189.150.137:5000/download_audio/${voicePath}");
+        final bytes = await readBytes("http://5.189.150.137:5000/download_audio/${voicePath}");
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/audio.wav');
+        print("bytes downloaded");
+        await file.writeAsBytes(bytes);
+        if (await file.exists()) {
+          yield state.ready(voiceList, 0,file.path);
+        }
       }
     }  catch (err){
       yield state.error(err.toString());
@@ -72,25 +85,31 @@ class ValidateBloc extends Bloc<ValidateEvent,ValidateState>{
     yield state.loading();
     try{
       final v2tId = state.voiceList[state.voiceIndex]["v2t_id"];
-      final  submitSuccess = await _api.validate(event.context, event.validation, v2tId);
-      print(submitSuccess);
-      //next index in the list
-      final voiceIndex = state.voiceIndex+1;
-      String voicePath;
-      if(state.voiceList[voiceIndex]['voice_path'].substring(0,6)=="voice/"){
-        voicePath = state.voiceList[voiceIndex]['voice_path'].substring(6);
-      } else {
-        voicePath = state.voiceList[voiceIndex]['voice_path'];
+      final response = await _api.validate(event.context, event.validation, v2tId);
+      if(response['note']!=null){
+        if(response['note']=="invalid session"){
+          print("session expired");
+          yield state.error("Session kadaluarsa, mohon restart app dan login ulang");
+        }
+        else {
+          yield state.error("terjadi kesalahan ${response['note']}");
+        }
+      } else{
+        final submitSuccess = response['success'];
+        print(submitSuccess);
+        //next index in the list
+        final voiceIndex = state.voiceIndex+1;
+        print("http://5.189.150.137:5000/download_audio/${state.voiceList[voiceIndex]['voice_path']}");
+        final bytes = await readBytes("http://5.189.150.137:5000/download_audio/${state.voiceList[voiceIndex]['voice_path']}");
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/audio.wav');
+        print("bytes downloaded");
+        await file.writeAsBytes(bytes);
+        if (await file.exists()) {
+          yield state.ready(state.voiceList,voiceIndex,file.path);
+        }
       }
-      print("http://5.189.150.137:5000/download_audio/${voicePath}");
-      final bytes = await readBytes("http://5.189.150.137:5000/download_audio/${voicePath}");
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/audio.wav');
-      print("bytes downloaded");
-      await file.writeAsBytes(bytes);
-      if (await file.exists()) {
-        yield state.ready(state.voiceList,voiceIndex,file.path);
-      }
+
     } catch(err){
       yield state.error(err.toString());
     }

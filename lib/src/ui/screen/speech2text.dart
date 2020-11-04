@@ -518,6 +518,15 @@ class _Speech2TextState extends State<Speech2Text> {
               Navigator.pop(context);
             }
           }
+          if(!state.isLoading){
+            _annotationController.text = "";
+            sliderCurrentPosition = 0.0;
+            _playerTxt = '00:00:00';
+            print(_playerTxt);
+            setState(() {
+
+            });
+          }
         },
         child: BlocBuilder<S2TBloc,S2TState>(
           cubit: _s2tBloc,
@@ -525,7 +534,6 @@ class _Speech2TextState extends State<Speech2Text> {
             if (!state.isLoading) {
               if(state.errorMessage==null){
                 voicepath = state.localVoicePath;
-                print(voicepath);
                 return ListView(children: <Widget>[
                   playerSection,
                   Padding(
