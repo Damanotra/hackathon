@@ -120,7 +120,7 @@ class _Text2SpeechState extends State<Text2Speech> {
     await _initializeExample(false);
 
     if (Platform.isAndroid) {
-      await copyAssets();
+//      await copyAssets();
     }
   }
 
@@ -128,6 +128,8 @@ class _Text2SpeechState extends State<Text2Speech> {
     Uint8List dataBuffer =
     (await rootBundle.load("assets/canardo.png")).buffer.asUint8List();
     String path = await playerModule.getResourcePath() + "/assets";
+    print("get resource path");
+    print(path);
     if (!await Directory(path).exists()) {
       await Directory(path).create(recursive: true);
     }
@@ -720,7 +722,9 @@ class _Text2SpeechState extends State<Text2Speech> {
                     padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
                     child: ElevatedButton(
                       onPressed: (){
-
+                        print("submitted path");
+                        print(this._path[_codec.index]);
+                        _t2sBloc.add(SubmitEvent(text: state.textList[state.textIndex], voicePath: this._path[_codec.index]));
                       },
                       style: ElevatedButton.styleFrom(
                           primary: Colors.orange,

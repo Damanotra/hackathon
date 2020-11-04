@@ -20,7 +20,7 @@ class SkipEvent extends T2SEvent{
 class SubmitEvent extends T2SEvent{
   String text;
   String voicePath;
-  SubmitEvent({BuildContext context, @required this.text}): super(context:context);
+  SubmitEvent({BuildContext context, @required this.text, @required this.voicePath}): super(context:context);
   @override
   String toString() => "Submit Annotation";
 }

@@ -110,6 +110,7 @@ class ActionAPI  extends BaseAPI {
     print(encodedURL);
     final request = MultipartRequest('POST',Uri.parse(encodedURL));
     request.fields['text'] = text;
+    request.fields['session_id'] = _prefs.getSessionId();
     request.files.add(file);
     final response = await doMultipart(
         request,

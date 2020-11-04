@@ -51,11 +51,10 @@ class BaseAPI{
   }
 
   Future<dynamic> doMultipart(MultipartRequest request,BuildContext context) async {
-
     request.headers['Accept']="application/json";
+    print(request.toString());
     final streamedResponse = await request.send();
     final response = await Response.fromStream(streamedResponse);
-
     print('Got Response ? ${response.statusCode}');
     if (response.statusCode == StatusCode.success) {
       final result = json.decode(response.body);
