@@ -8,13 +8,13 @@ import 'package:http/http.dart';
 class ActionAPI  extends BaseAPI {
   final _prefs = locator<Preference>();
 
-  Future<dynamic> getVoices(BuildContext context) async {
+  Future<dynamic> getVoices(BuildContext context, int limit) async {
     final response = await doPost(
         'get_voice_skip_n',
         {
           "session_id":_prefs.getSessionId(),
           "skip":0,
-          "limit":3
+          "limit":limit
         },
         context);
     print(response.toString());
@@ -118,13 +118,13 @@ class ActionAPI  extends BaseAPI {
     return response;
   }
 
-  Future<dynamic> getTexts(BuildContext context) async {
+  Future<dynamic> getTexts(BuildContext context,int limit) async {
     final response = await doPost(
         'get_text_skip_n',
         {
           "session_id":_prefs.getSessionId(),
           "skip":0,
-          "limit":3
+          "limit":limit
         },
         context);
     print(response.toString());

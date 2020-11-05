@@ -70,6 +70,7 @@ class ValidateBloc extends Bloc<ValidateEvent,ValidateState>{
     yield state.loading();
     List voiceList = state.voiceList;
     try{
+      //get new instance of problem
       final response = await _api.getVoiceAndText(event.context,1);
       if(response['note']!=null){
         if(response['note']=="invalid session"){
@@ -80,11 +81,14 @@ class ValidateBloc extends Bloc<ValidateEvent,ValidateState>{
           yield state.error("terjadi kesalahan ${response['note']}");
         }
       } else {
+        //add the requested instance
         voiceList.addAll(response['data'] as List);
       }
       if(state.score == 10){
+        //check if the score become 10 once skipped *impossible
         yield state.done();
       }
+      //after preparation, forward to next problem
       final voiceIndex = state.voiceIndex+1;
       final voicePath = state.voiceList[voiceIndex]['voice_path'];
       print("http://5.189.150.137:5000/download_audio/$voicePath");

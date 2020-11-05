@@ -65,6 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       SizedBox(height: deviceHeight*0.02),
                       TextFormField(
+                        obscureText: true,
                         controller: _passwordController,
                         decoration: InputDecoration(
                             hintText: "Password",

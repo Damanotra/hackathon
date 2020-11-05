@@ -614,7 +614,7 @@ class _Speech2TextState extends State<Speech2Text> {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
                       child: StepProgressIndicator(
-                        totalSteps: state.voiceList.length,
+                        totalSteps: 10,
                         currentStep: state.score,
                         size: 12,
                         padding: 1,
