@@ -5,7 +5,8 @@ class ValidateState{
   final String errorMessage;
   final bool isLoading;
   final bool isDone;
-  ValidateState({this.voiceList, this.voiceIndex,this.localVoicePath, this.errorMessage, this.isLoading, this.isDone});
+  final int score;
+  ValidateState({this.voiceList, this.voiceIndex,this.localVoicePath, this.errorMessage, this.isLoading, this.isDone, this.score});
 
   ValidateState copyWith({
     List voiceList,
@@ -13,7 +14,8 @@ class ValidateState{
     String localVoicePath,
     String errorMessage,
     bool isLoading,
-    bool isDone
+    bool isDone,
+    int score
   }) {
     return ValidateState(
       voiceList: voiceList ?? this.voiceList,
@@ -21,7 +23,8 @@ class ValidateState{
       localVoicePath: localVoicePath ?? this.localVoicePath,
       errorMessage: errorMessage ?? this.errorMessage,
       isLoading: isLoading ?? this.isLoading,
-      isDone: isDone ?? this.isDone
+      isDone: isDone ?? this.isDone,
+      score: score ?? this.score
     );
   }
 
@@ -32,17 +35,19 @@ class ValidateState{
       localVoicePath:'',
       isLoading: true,
       errorMessage: null,
-      isDone: false
+      isDone: false,
+      score: 0
     );
   }
 
-  ValidateState ready(voiceList,voiceIndex,localVoicePath){
+  ValidateState ready(voiceList,voiceIndex,localVoicePath,score){
     return copyWith(
       voiceList: voiceList,
       voiceIndex: voiceIndex,
       localVoicePath: localVoicePath,
       errorMessage: null,
-      isLoading:false
+      isLoading:false,
+      score: score
     );
   }
 

@@ -78,13 +78,13 @@ class ActionAPI  extends BaseAPI {
     return responseMap;
   }
 
-  Future<Map> getVoiceAndText(BuildContext context) async{
+  Future<Map> getVoiceAndText(BuildContext context,int limit) async{
     final response = await doPost(
         "get_voice_to_text_skip_n",
         {
           "session_id":_prefs.getSessionId(),
           "skip":0,
-          "limit":3
+          "limit":limit
         },
         context);
     print(response.toString());

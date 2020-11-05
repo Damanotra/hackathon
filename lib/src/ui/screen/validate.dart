@@ -508,7 +508,7 @@ class _ValidateScreenState extends State<ValidateScreen> {
 
     return  Scaffold(
       appBar: AppBar(
-        title: const Text('Flutter Sound Demo'),
+        title: const Text('Validate'),
 
       ),
       body: BlocListener<ValidateBloc,ValidateState>(
@@ -600,12 +600,12 @@ class _ValidateScreenState extends State<ValidateScreen> {
                       ),),
                   ),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
+                    padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.05),
                     child: StepProgressIndicator(
-                      totalSteps: state.voiceList.length,
+                      totalSteps: 10,
                       currentStep: state.score,
-                      size: 12,
-                      padding: 1,
+                      size: 10,
+                      padding: 0,
                       selectedGradientColor: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -622,7 +622,7 @@ class _ValidateScreenState extends State<ValidateScreen> {
               }
             }
             else {
-              return CircularProgressIndicator();
+              return Center(child: CircularProgressIndicator());
             }
           },
         ),
