@@ -17,12 +17,13 @@ class Preference {
   }
 
   String getSessionId(){
+    print("get SESSIONID = ${prefs.getString('session')}");
     return prefs.getString('session');
   }
 
-  void setSessionId(String token) async {
-    print('SET SESSIONID = $token');
-    await prefs.setString('session', token);
+  void setSessionId(String session) async {
+    print('SET SESSIONID = $session');
+    await prefs.setString('session', session);
   }
 
   String getEmail(){
@@ -42,6 +43,7 @@ class Preference {
   }
 
   Future<void> logout() async {
+    print("LOG OUT");
     await prefs.remove('session');
     await prefs.remove('email');
     await prefs.remove('password');

@@ -13,6 +13,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:step_progress_indicator/step_progress_indicator.dart';
 
 const int SAMPLE_RATE = 8000;
 const int BLOCK_SIZE = 4096;
@@ -534,7 +535,6 @@ class _Text2SpeechState extends State<Text2Speech> {
 
 
 
-
   @override
   Widget build(BuildContext context) {
 
@@ -689,7 +689,7 @@ class _Text2SpeechState extends State<Text2Speech> {
     double deviceHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
-        title: Text("Appbar"),
+        title: Text("Text To Speech"),
       ),
       body: BlocListener<T2SBloc,T2SState>(
         cubit: _t2sBloc,
@@ -722,9 +722,15 @@ class _Text2SpeechState extends State<Text2Speech> {
                     padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
                     child: ElevatedButton(
                       onPressed: (){
-                        print("submitted path");
-                        print(this._path[_codec.index]);
-                        _t2sBloc.add(SubmitEvent(text: state.textList[state.textIndex], voicePath: this._path[_codec.index]));
+                        if(this._path[_codec.index]!=null){
+                          print(this._path[_codec.index]);
+                          _t2sBloc.add(SubmitEvent(text: state.textList[state.textIndex], voicePath: this._path[_codec.index]));
+                        } else {
+                          Scaffold.of(context).showSnackBar(
+                            SnackBar(content: Text("Recording can't be empty"))
+                          );
+                        }
+
                       },
                       style: ElevatedButton.styleFrom(
                           primary: Colors.orange,
@@ -747,6 +753,29 @@ class _Text2SpeechState extends State<Text2Speech> {
                           textStyle: TextStyle()
                       ),
                       child: Text("Skip"),
+                    ),
+                  ),
+                  SizedBox(height: deviceHeight*0.05),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text("SCORE :",
+                      style: TextStyle(
+                          fontSize: 18
+                      ),),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
+                    child: StepProgressIndicator(
+                      totalSteps: state.textList.length,
+                      currentStep: state.score,
+                      size: 12,
+                      padding: 1,
+                      selectedGradientColor: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Colors.yellowAccent, Colors.deepOrange],
+                      ),
+                      roundedEdges: Radius.circular(10),
                     ),
                   )
                 ],

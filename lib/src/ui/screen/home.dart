@@ -39,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ListTile(
               title: Text("Log out"),
               onTap: (){
+                _prefs.logout();
                 Navigator.of(context).pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
               },
             )
@@ -86,7 +87,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             GestureDetector(
               onTap: (){
-                _prefs.logout();
                 Navigator.of(context).pushNamed('/validate', arguments: (Route<dynamic> route) => false);
               },
               child: Container(

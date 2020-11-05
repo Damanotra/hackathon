@@ -46,7 +46,7 @@ dependencies:
   flutter_dotenv: ^2.1.0
   audioplayers: ^0.16.2
   shared_preferences: ^0.5.12+2
-
+  step_progress_indicator: ^0.2.4+7
 
 dev_dependencies:
   flutter_test:

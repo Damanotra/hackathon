@@ -7,13 +7,16 @@ class S2TState{
   final String errorMessage;
   final bool isLoading;
   final bool isDone;
+  final int score;
   S2TState({
     @required this.voiceList,
     @required this.voiceIndex,
     @required this.localVoicePath,
-    @required this.errorMessage,
+    this.errorMessage,
     @required this.isLoading,
-    this.isDone= false});
+    this.isDone= false,
+    this.score = 0
+  });
 
   S2TState copyWith({
     List voiceList,
@@ -21,7 +24,8 @@ class S2TState{
     String localVoicePath,
     String errorMessage,
     bool isLoading,
-    isDone
+    isDone,
+    score
   }) {
     return S2TState(
       voiceList: voiceList ?? this.voiceList,
@@ -29,7 +33,8 @@ class S2TState{
       localVoicePath: localVoicePath ?? this.localVoicePath,
       errorMessage: errorMessage ?? this.errorMessage,
       isLoading: isLoading ?? this.isLoading,
-      isDone : isDone ?? isDone
+      isDone : isDone ?? this.isDone,
+      score: score ?? this.score
     );
   }
 
@@ -40,17 +45,19 @@ class S2TState{
       localVoicePath:'',
       isLoading: true,
       errorMessage: null,
-      isDone: false
+      isDone: false,
+      score: 0
     );
   }
 
-  S2TState ready(voiceList,voiceIndex,localVoicePath){
+  S2TState ready(voiceList,voiceIndex,localVoicePath,score){
     return copyWith(
       voiceList: voiceList,
       voiceIndex: voiceIndex,
       localVoicePath: localVoicePath,
       errorMessage: null,
       isLoading:false,
+      score : score
     );
   }
 
@@ -64,14 +71,16 @@ class S2TState{
   S2TState error(errorMessage){
     return copyWith(
       isLoading: false,
-      errorMessage: errorMessage
+      errorMessage: errorMessage,
     );
   }
+
   S2TState done(){
     return copyWith(
       isLoading: false,
       errorMessage: null,
-      isDone: true
+      isDone: true,
+      score: score,
     );
   }
 }

@@ -47,7 +47,7 @@ class S2TBloc extends Bloc<S2TEvent,S2TState>{
         print("bytes downloaded");
         await file.writeAsBytes(bytes);
         if (await file.exists()) {
-          yield state.ready(voiceList, 0,file.path);
+          yield state.ready(voiceList, 0,file.path,0);
         }
       }
     }  catch (err){
@@ -69,7 +69,7 @@ class S2TBloc extends Bloc<S2TEvent,S2TState>{
         print("bytes downloaded");
         await file.writeAsBytes(bytes);
         if (await file.exists()) {
-          yield state.ready(state.voiceList,voiceIndex,file.path);
+          yield state.ready(state.voiceList,voiceIndex,file.path,state.score);
         }
       }
     } catch(err){
@@ -105,7 +105,7 @@ class S2TBloc extends Bloc<S2TEvent,S2TState>{
           print("bytes downloaded");
           await file.writeAsBytes(bytes);
           if (await file.exists()) {
-            yield state.ready(state.voiceList,voiceIndex,file.path);
+            yield state.ready(state.voiceList,voiceIndex,file.path,state.score + 1);
           }
         }
       }

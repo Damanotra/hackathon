@@ -11,6 +11,7 @@ import 'package:hackathon/src/bloc/speech2text/s2t_state.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:step_progress_indicator/step_progress_indicator.dart';
 
 const int SAMPLE_RATE = 8000;
 const int BLOCK_SIZE = 4096;
@@ -70,6 +71,7 @@ class _Speech2TextState extends State<Speech2Text> {
   Codec _codec = Codec.pcm16WAV;
   bool _decoderSupported = true; // Optimist
   String voicepath;
+  bool submitEnabled = false;
 
   // Whether the user wants to use the audio player features
   bool _isAudioPlayer = false;
@@ -82,7 +84,7 @@ class _Speech2TextState extends State<Speech2Text> {
     await playerModule.closeAudioSession();
     _isAudioPlayer = withUI;
     await playerModule.openAudioSession(
-        withUI: withUI ,
+        withUI: withUI,
         focus: AudioFocus.requestFocusAndStopOthers,
         category: SessionCategory.playAndRecord,
         mode: SessionMode.modeDefault,
@@ -91,7 +93,6 @@ class _Speech2TextState extends State<Speech2Text> {
     initializeDateFormatting();
     await setCodec(_codec);
   }
-
 
   Future<void> init() async {
     await _initializeExample(false);
@@ -102,7 +103,7 @@ class _Speech2TextState extends State<Speech2Text> {
 
   Future<void> copyAssets() async {
     Uint8List dataBuffer =
-    (await rootBundle.load("assets/canardo.png")).buffer.asUint8List();
+        (await rootBundle.load("assets/canardo.png")).buffer.asUint8List();
     String path = await playerModule.getResourcePath() + "/assets";
     if (!await Directory(path).exists()) {
       await Directory(path).create(recursive: true);
@@ -140,7 +141,6 @@ class _Speech2TextState extends State<Speech2Text> {
     }
   }
 
-
   Future<void> getDuration() async {
     switch (_media) {
       case Media.file:
@@ -150,8 +150,6 @@ class _Speech2TextState extends State<Speech2Text> {
     }
     setState(() {});
   }
-
-
 
   Future<bool> fileExists(String path) async {
     return await File(path).exists();
@@ -224,8 +222,7 @@ class _Speech2TextState extends State<Speech2Text> {
     return bytes;
   }
 
-  Future<void> feedHim(String path) async
-  {
+  Future<void> feedHim(String path) async {
     Uint8List data = await _readFileByte(path);
     return playerModule.feedFromStream(data);
   }
@@ -236,14 +233,14 @@ class _Speech2TextState extends State<Speech2Text> {
       Codec codec = _codec;
       if (_media == Media.file) {
 //          audioFilePath = localFilePath;
-          audioFilePath = voicepath;
-          print(audioFilePath);
+        audioFilePath = voicepath;
+        print(audioFilePath);
       }
       if (audioFilePath != null) {
         await playerModule.startPlayer(
             fromURI: audioFilePath,
             codec: codec,
-            sampleRate:  SAMPLE_RATE,
+            sampleRate: SAMPLE_RATE,
             whenFinished: () {
               print('Play finished');
               setState(() {});
@@ -257,7 +254,6 @@ class _Speech2TextState extends State<Speech2Text> {
     }
   }
 
-
   Future<void> stopPlayer() async {
     try {
       await playerModule.stopPlayer();
@@ -270,21 +266,17 @@ class _Speech2TextState extends State<Speech2Text> {
     } catch (err) {
       print('error: $err');
     }
-    this.setState(() {
-    });
+    this.setState(() {});
   }
 
   void pauseResumePlayer() async {
     if (playerModule.isPlaying) {
-      await  playerModule.pausePlayer();
+      await playerModule.pausePlayer();
     } else {
       await playerModule.resumePlayer();
     }
-    setState(() {
-
-    });
+    setState(() {});
   }
-
 
   void seekToPlayer(int milliSecs) async {
     print('-->seekToPlayer');
@@ -293,8 +285,6 @@ class _Speech2TextState extends State<Speech2Text> {
     print('<--seekToPlayer');
   }
 
-
-
   void Function() onPauseResumePlayerPressed() {
     if (playerModule == null) return null;
     if (playerModule.isPaused || playerModule.isPlaying) {
@@ -302,7 +292,6 @@ class _Speech2TextState extends State<Speech2Text> {
     }
     return null;
   }
-
 
   void Function() onStopPlayerPressed() {
     if (playerModule == null) return null;
@@ -313,7 +302,7 @@ class _Speech2TextState extends State<Speech2Text> {
 
   void Function() onStartPlayerPressed() {
     if (playerModule == null) return null;
-    if (_media == Media.file ) {
+    if (_media == Media.file) {
       return (playerModule.isStopped) ? startPlayer : null;
     }
 
@@ -331,6 +320,26 @@ class _Speech2TextState extends State<Speech2Text> {
       _codec = codec;
     });
   }
+
+  void submitPressed() {
+    _s2tBloc.add(SubmitEvent(
+        annotation: _annotationController.text,
+        context: context));
+  }
+
+  void onTextChanged(String newValue){
+    if(newValue==null || newValue==''){
+      setState(() {
+        submitEnabled = false;
+      });
+    } else {
+      setState(() {
+        submitEnabled = true;
+      });
+    }
+  }
+  
+  
 
 //  void Function(bool) audioPlayerSwitchChanged() {
 //    if (!playerModule.isStopped) return null;
@@ -410,11 +419,9 @@ class _Speech2TextState extends State<Speech2Text> {
             min: 0.0,
             max: maxDuration,
             onChanged: (double value) async {
-              await seekToPlayer( value.toInt());
+              await seekToPlayer(value.toInt());
             },
             divisions: maxDuration == 0.0 ? 1 : maxDuration.toInt()));
-
-
 
     Widget playerSection = Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -495,7 +502,7 @@ class _Speech2TextState extends State<Speech2Text> {
                 min: 0.0,
                 max: maxDuration,
                 onChanged: (double value) async {
-                  await seekToPlayer( value.toInt());
+                  await seekToPlayer(value.toInt());
                 },
                 divisions: maxDuration == 0.0 ? 1 : maxDuration.toInt())),
         Container(
@@ -505,96 +512,130 @@ class _Speech2TextState extends State<Speech2Text> {
       ],
     );
 
-    return  Scaffold(
+    return Scaffold(
       appBar: AppBar(
         title: const Text('Flutter Sound Demo'),
-
       ),
-      body: BlocListener<S2TBloc,S2TState>(
-        cubit: _s2tBloc,
-        listener: (context, state) {
-          if(state.isDone!=null){
-            if(state.isDone){
-              Navigator.pop(context);
-            }
-          }
-          if(!state.isLoading){
-            _annotationController.text = "";
-            sliderCurrentPosition = 0.0;
-            _playerTxt = '00:00:00';
-            print(_playerTxt);
-            setState(() {
-
-            });
-          }
-        },
-        child: BlocBuilder<S2TBloc,S2TState>(
+      body: Center(
+        child: BlocListener<S2TBloc, S2TState>(
           cubit: _s2tBloc,
-          builder: (context, state) {
-            if (!state.isLoading) {
-              if(state.errorMessage==null){
-                voicepath = state.localVoicePath;
-                return ListView(children: <Widget>[
-                  playerSection,
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
-                    child: TextField(
-                      controller: _annotationController,
-                      keyboardType: TextInputType.multiline,
-                      maxLines: null,
-                      decoration: InputDecoration(
-                          hintText: "Masukan kalimat yang kamu dengar",
-                          //                contentPadding: EdgeInsets.fromLTRB(15, 12, 15, 12),
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(0))),
-                    ),
-                  ),
-                  SizedBox(height: deviceHeight * 0.07),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _s2tBloc.add(SubmitEvent(
-                          annotation: _annotationController.text,
-                          context: context
-                        ));
-                      },
-                      style: ElevatedButton.styleFrom(
-                          primary: Colors.orange,
-                          padding:
-                          EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                          textStyle: TextStyle()),
-                      child: Text("Submit"),
-                    ),
-                  ),
-                  SizedBox(
-                    height: deviceHeight * 0.02,
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _s2tBloc.add(SkipEvent());
-                      },
-                      style: ElevatedButton.styleFrom(
-                          primary: Colors.orange,
-                          padding:
-                          EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                          textStyle: TextStyle()),
-                      child: Text("Skip"),
-                    ),
-                  )
-                  // ignore: missing_return
-                ]);
-              }
-              else{
-                return Text(state.errorMessage);
+          listener: (context, state) {
+            if (state.isDone != null) {
+              if (state.isDone) {
+                Navigator.pop(context);
               }
             }
-            else {
-              return CircularProgressIndicator();
+            if (!state.isLoading) {
+              _annotationController.text = "";
+              sliderCurrentPosition = 0.0;
+              _playerTxt = '00:00:00';
+              print(_playerTxt);
+              setState(() {});
             }
           },
+          child: BlocBuilder<S2TBloc, S2TState>(
+            cubit: _s2tBloc,
+            builder: (context, state) {
+              if (!state.isLoading) {
+                if (state.errorMessage == null) {
+                  voicepath = state.localVoicePath;
+                  return ListView(
+                    padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.05),
+                      children: <Widget>[
+                    playerSection,
+                    Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
+                      child: TextField(
+                        controller: _annotationController,
+                        keyboardType: TextInputType.multiline,
+                        onChanged: onTextChanged,
+                        maxLines: null,
+                        decoration: InputDecoration(
+                            hintText: "Masukan kalimat yang kamu dengar",
+                            //                contentPadding: EdgeInsets.fromLTRB(15, 12, 15, 12),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(0))),
+                      ),
+                    ),
+                    SizedBox(height: deviceHeight * 0.07),
+                    Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
+                      child: ElevatedButton(
+                        onPressed:  (){
+                          if(_annotationController.text!='' && _annotationController.text!=null){
+                            print(_annotationController.text);
+                            _s2tBloc.add(SubmitEvent(
+                                annotation: _annotationController.text,
+                                context: context));
+                          } else {
+                            Scaffold.of(context).showSnackBar(
+                                SnackBar(content: Text("Annotation Text can't be empty"))
+                            );
+                          }
+                        },
+//                        (_annotationController.text!='' && _annotationController.text!=null) ?
+//                            submitPressed: null,
+                        style: ElevatedButton.styleFrom(
+                            primary: Colors.orange,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 30, vertical: 15),
+                            textStyle: TextStyle()),
+                        child: Text("Submit"),
+                      ),
+                    ),
+                    SizedBox(
+                      height: deviceHeight * 0.02,
+                    ),
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          _s2tBloc.add(SkipEvent());
+                        },
+                        style: ElevatedButton.styleFrom(
+                            primary: Colors.orange,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 30, vertical: 15),
+                            textStyle: TextStyle()),
+                        child: Text("Skip"),
+                      ),
+                    ),
+                    SizedBox(height: deviceHeight*0.1),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text("SCORE :",
+                        style: TextStyle(
+                          fontSize: 18
+                        ),),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
+                      child: StepProgressIndicator(
+                        totalSteps: state.voiceList.length,
+                        currentStep: state.score,
+                        size: 12,
+                        padding: 1,
+                        selectedGradientColor: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Colors.yellowAccent, Colors.deepOrange],
+                        ),
+                        roundedEdges: Radius.circular(10),
+                      ),
+                    )
+                    // ignore: missing_return
+                  ]);
+                } else {
+                  return Text(state.errorMessage);
+                }
+              } else {
+                return CircularProgressIndicator();
+              }
+            },
+          ),
         ),
       ),
     );

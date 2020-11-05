@@ -4,21 +4,24 @@ class T2SState{
   final String errorMessage;
   final bool isLoading;
   final bool isDone;
-  T2SState({this.textList, this.textIndex, this.errorMessage, this.isLoading,this.isDone});
+  final int score;
+  T2SState({this.textList, this.textIndex, this.errorMessage, this.isLoading,this.isDone, this.score});
 
   T2SState copyWith({
     List textList,
     int textIndex,
     String errorMessage,
     bool isLoading,
-    bool isDone
+    bool isDone,
+    int score
   }) {
     return T2SState(
       textList: textList ?? this.textList,
       textIndex: textIndex ?? this.textIndex,
       errorMessage: errorMessage ?? this.errorMessage,
       isLoading: isLoading ?? this.isLoading,
-      isDone: isDone ?? this.isDone
+      isDone: isDone ?? this.isDone,
+      score: score ?? this.score
     );
   }
 
@@ -28,16 +31,18 @@ class T2SState{
       textIndex: -1,
       isLoading: true,
       errorMessage: null,
-      isDone: false
+      isDone: false,
+      score: 0,
     );
   }
 
-  T2SState ready(textList, textIndex){
+  T2SState ready(textList, textIndex,score){
     return copyWith(
       textList: textList,
       textIndex: textIndex,
       errorMessage: null,
-      isLoading:false
+      isLoading:false,
+      score: score
     );
   }
 

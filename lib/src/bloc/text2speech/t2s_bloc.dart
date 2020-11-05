@@ -40,7 +40,7 @@ class T2SBloc extends Bloc<T2SEvent,T2SState>{
       } else {
         final  textList = response['text'];
         print(textList);
-        yield state.ready(textList,0);
+        yield state.ready(textList,0,0);
       }
     }  catch (err){
       yield state.error(err.toString());
@@ -54,7 +54,7 @@ class T2SBloc extends Bloc<T2SEvent,T2SState>{
         yield state.done();
       } else{
         final textIndex = state.textIndex+1;
-        yield state.ready(state.textList, textIndex);
+        yield state.ready(state.textList, textIndex,state.score);
       }
     } catch(err){
       yield state.error(err.toString());
@@ -75,7 +75,7 @@ class T2SBloc extends Bloc<T2SEvent,T2SState>{
       } else{
         //go to next index
         final textIndex = state.textIndex+1;
-        yield state.ready(state.textList,textIndex);
+        yield state.ready(state.textList,textIndex, state.score+1);
       }
     } catch(err){
       yield state.error(err.toString());

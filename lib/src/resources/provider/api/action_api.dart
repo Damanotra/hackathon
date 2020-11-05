@@ -45,7 +45,7 @@ class ActionAPI  extends BaseAPI {
         },
         context);
     print(response.toString());
-    await _prefs.setSessionId((response as Map)['session_id']);
+    await _prefs.setSessionId(response['session_id']);
     await _prefs.setEmail(email);
     await _prefs.setPassword(password);
     return (response as Map);
@@ -59,7 +59,7 @@ class ActionAPI  extends BaseAPI {
           "password":password
         },
         context);
-    await _prefs.setSessionId((response as Map)['session_id']);
+    await _prefs.setSessionId(response['session_id']);
     await _prefs.setEmail(email);
     await _prefs.setPassword(password);
     print(response.toString());

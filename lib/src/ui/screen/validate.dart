@@ -11,6 +11,7 @@ import 'package:hackathon/src/bloc/validate/validate_state.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:step_progress_indicator/step_progress_indicator.dart';
 
 const int SAMPLE_RATE = 8000;
 const int BLOCK_SIZE = 4096;
@@ -556,7 +557,7 @@ class _ValidateScreenState extends State<ValidateScreen> {
                         ElevatedButton(
                           onPressed: () {
                             _validateBloc.add(SubmitEvent(
-                                validation: true,
+                                validation: false,
                                 context: context
                             ));
                           },
@@ -588,6 +589,29 @@ class _ValidateScreenState extends State<ValidateScreen> {
                           EdgeInsets.symmetric(horizontal: 0, vertical: 0),
                           textStyle: TextStyle()),
                       child: Text("Skip"),
+                    ),
+                  ),
+                  SizedBox(height: deviceHeight*0.1),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text("SCORE :",
+                      style: TextStyle(
+                          fontSize: 18
+                      ),),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
+                    child: StepProgressIndicator(
+                      totalSteps: state.voiceList.length,
+                      currentStep: state.score,
+                      size: 12,
+                      padding: 1,
+                      selectedGradientColor: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Colors.yellowAccent, Colors.deepOrange],
+                      ),
+                      roundedEdges: Radius.circular(10),
                     ),
                   )
                   // ignore: missing_return
