@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hackathon/src/ui/screen/home.dart';
+import 'package:hackathon/src/ui/screen/lobby.dart';
 import 'package:hackathon/src/ui/screen/login.dart';
 import 'package:hackathon/src/ui/screen/signup.dart';
 import 'package:hackathon/src/ui/screen/speech2text.dart';
@@ -15,7 +16,7 @@ class AppRouter {
         );
       case '/home':
         return MaterialPageRoute(
-          builder: (_) => HomeScreen(),
+          builder: (_) => LobbyScreen(),
         );
       case '/text':
         return MaterialPageRoute(

@@ -18,9 +18,7 @@ class ActionAPI  extends BaseAPI {
         },
         context);
     print(response.toString());
-    final result = response;
-    print(result.length);
-    return Future.value(result);
+    return Future.value(response);
   }
 
   Future<dynamic> annotateVoice(BuildContext context,String voicePath, String annotation) async {

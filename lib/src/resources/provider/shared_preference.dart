@@ -1,4 +1,6 @@
 
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Preference {
@@ -49,4 +51,52 @@ class Preference {
     await prefs.remove('password');
   }
 
+  List<dynamic> getGameList(){
+    return json.decode(prefs.get('gameList'));
+  }
+
+  void setGameList(dynamic gameList) async {
+    await prefs.setString('gameList', gameList.toString());
+  }
+
+  void addGameList(int value) async {
+    final gameList = getGameList();
+    gameList.add(value);
+    setGameList(gameList);
+  }
+
+  void popGameList() async {
+    final gameList = getGameList();
+    gameList.removeAt(0);
+    setGameList(gameList);
+  }
+
+  int getGameIndex(){
+    return prefs.getInt('gameIndex');
+  }
+
+  void setGameIndex(int index) async{
+    await prefs.setInt('gameIndex', index);
+  }
+
+  void nextGameIndex() async{
+    setGameIndex(getGameIndex()+1);
+  }
+
+  int getGameScore(){
+    return prefs.getInt('gameScore');
+  }
+
+  void setGameScore(int value)async{
+    await prefs.setInt('gameScore', value);
+  }
+
+  void plusGameScore()async{
+    setGameScore(getGameScore()+1);
+  }
+
+  void minusGameScore()async{
+    if(getGameScore()>0)
+      setGameScore(getGameScore()-1);
+  }
 }

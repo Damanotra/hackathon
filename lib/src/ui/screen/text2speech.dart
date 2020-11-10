@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hackathon/locator.dart';
 import 'package:hackathon/src/bloc/text2speech/t2s_bloc.dart';
 import 'package:hackathon/src/bloc/text2speech/t2s_event.dart';
 import 'package:hackathon/src/bloc/text2speech/t2s_state.dart';
+import 'package:hackathon/src/resources/provider/shared_preference.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -50,7 +52,7 @@ class Text2Speech extends StatefulWidget {
 class _Text2SpeechState extends State<Text2Speech> {
   //bloc thing
   final _t2sBloc = T2SBloc();
-
+  final _prefs = locator<Preference>();
 
   bool _isRecording = false;
   List<String> _path = [
@@ -542,16 +544,16 @@ class _Text2SpeechState extends State<Text2Speech> {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Container(
-            margin: EdgeInsets.only(top: 12.0, bottom: 16.0),
-            child: Text(
-              this._recorderTxt,
-              style: TextStyle(
-                fontSize: 35.0,
-                color: Colors.black,
-              ),
-            ),
-          ),
+//          Container(
+//            margin: EdgeInsets.only(top: 12.0, bottom: 16.0),
+//            child: Text(
+//              this._recorderTxt,
+//              style: TextStyle(
+//                fontSize: 35.0,
+//                color: Colors.black,
+//              ),
+//            ),
+//          ),
           _isRecording
               ? LinearProgressIndicator(
               value: 100.0 / 160.0 * (this._dbLevel ?? 1) / 100,
@@ -691,99 +693,116 @@ class _Text2SpeechState extends State<Text2Speech> {
       appBar: AppBar(
         title: Text("Text To Speech"),
       ),
-      body: BlocListener<T2SBloc,T2SState>(
-        cubit: _t2sBloc,
-        listener: (context,state){
-          if(state.isDone!=null){
-            if(state.isDone){
-              Navigator.pop(context);
-            }
-          }
-        },
-        child: BlocBuilder<T2SBloc,T2SState>(
+      body: Center(
+        child: BlocListener<T2SBloc,T2SState>(
           cubit: _t2sBloc,
-          builder: (context,state){
-            if(state.isLoading){
-              return CircularProgressIndicator();
-            } else if(state.errorMessage==null){
-              return ListView(
-                children: <Widget>[
-                  SizedBox(height: deviceHeight*0.05),
-                  Center(
-                      child: Text(
-                        '"${state.textList[state.textIndex]}"',
-                        style: TextStyle(fontSize: 20),
-                      )
-                  ),
-                  SizedBox(height: deviceHeight*0.02),
-                  recorderSection,
-                  playerSection,
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
-                    child: ElevatedButton(
-                      onPressed: (){
-                        if(this._path[_codec.index]!=null){
-                          print(this._path[_codec.index]);
-                          _t2sBloc.add(SubmitEvent(text: state.textList[state.textIndex], voicePath: this._path[_codec.index]));
-                        } else {
-                          Scaffold.of(context).showSnackBar(
-                            SnackBar(content: Text("Recording can't be empty"))
-                          );
-                        }
-
-                      },
-                      style: ElevatedButton.styleFrom(
-                          primary: Colors.orange,
-                          padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                          textStyle: TextStyle()
-                      ),
-                      child: Text("Submit"),
-                    ),
-                  ),
-                  SizedBox(height: deviceHeight*0.02,),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
-                    child: ElevatedButton(
-                      onPressed: (){
-                        _t2sBloc.add(SkipEvent());
-                      },
-                      style: ElevatedButton.styleFrom(
-                          primary: Colors.orange,
-                          padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                          textStyle: TextStyle()
-                      ),
-                      child: Text("Skip"),
-                    ),
-                  ),
-                  SizedBox(height: deviceHeight*0.05),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text("SCORE :",
-                      style: TextStyle(
-                          fontSize: 18
-                      ),),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
-                    child: StepProgressIndicator(
-                      totalSteps: 10,
-                      currentStep: state.score,
-                      size: 12,
-                      padding: 1,
-                      selectedGradientColor: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Colors.yellowAccent, Colors.deepOrange],
-                      ),
-                      roundedEdges: Radius.circular(10),
-                    ),
-                  )
-                ],
-              );
-            } else{
-              return Text(state.errorMessage);
+          listener: (context,state){
+            if(state.isDone!=null){
+              if(state.isDone){
+                Navigator.pop(context);
+              }
+            }
+            if(state.isNext!=null){
+              if(state.isNext){
+                switch(_prefs.getGameList()[0]){
+                  case 0:
+                    Navigator.of(context).pushReplacementNamed('/speech', arguments: (Route<dynamic> route) => false);
+                    break;
+                  case 1:
+                    Navigator.of(context).pushReplacementNamed('/text', arguments: (Route<dynamic> route) => false);
+                    break;
+                  case 2:
+                    Navigator.of(context).pushReplacementNamed('/validate', arguments: (Route<dynamic> route) => false);
+                    break;
+                }
+              }
             }
           },
+          child: BlocBuilder<T2SBloc,T2SState>(
+            cubit: _t2sBloc,
+            builder: (context,state){
+              if(state.isLoading){
+                return CircularProgressIndicator();
+              } else if(state.errorMessage==null){
+                return ListView(
+                  children: <Widget>[
+                    SizedBox(height: deviceHeight*0.05),
+                    Center(
+                        child: Text(
+                          '"${state.textList[0]}"',
+                          style: TextStyle(fontSize: 20),
+                        )
+                    ),
+                    SizedBox(height: deviceHeight*0.02),
+                    recorderSection,
+                    playerSection,
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
+                      child: ElevatedButton(
+                        onPressed: (){
+                          if(this._path[_codec.index]!=null){
+                            print(this._path[_codec.index]);
+                            _t2sBloc.add(SubmitEvent(text: state.textList[0], voicePath: this._path[_codec.index]));
+                          } else {
+                            Scaffold.of(context).showSnackBar(
+                              SnackBar(content: Text("Recording can't be empty"))
+                            );
+                          }
+
+                        },
+                        style: ElevatedButton.styleFrom(
+                            primary: Colors.orange,
+                            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                            textStyle: TextStyle()
+                        ),
+                        child: Text("Submit"),
+                      ),
+                    ),
+                    SizedBox(height: deviceHeight*0.02,),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
+                      child: ElevatedButton(
+                        onPressed: (){
+                          _t2sBloc.add(SkipEvent());
+                        },
+                        style: ElevatedButton.styleFrom(
+                            primary: Colors.orange,
+                            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                            textStyle: TextStyle()
+                        ),
+                        child: Text("Skip"),
+                      ),
+                    ),
+                    SizedBox(height: deviceHeight*0.05),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text("SCORE :",
+                        style: TextStyle(
+                            fontSize: 18
+                        ),),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
+                      child: StepProgressIndicator(
+                        totalSteps: 10,
+                        currentStep: _prefs.getGameScore(),
+                        size: 12,
+                        padding: 1,
+                        selectedGradientColor: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Colors.yellowAccent, Colors.deepOrange],
+                        ),
+                        roundedEdges: Radius.circular(10),
+                      ),
+                    )
+                  ],
+                );
+              } else{
+                return Text(state.errorMessage);
+              }
+            },
+          ),
         ),
       )
     );

@@ -5,9 +5,11 @@ import 'dart:math';
 import 'dart:typed_data' show Uint8List;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hackathon/locator.dart';
 import 'package:hackathon/src/bloc/speech2text/s2t_bloc.dart';
 import 'package:hackathon/src/bloc/speech2text/s2t_event.dart';
 import 'package:hackathon/src/bloc/speech2text/s2t_state.dart';
+import 'package:hackathon/src/resources/provider/shared_preference.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:flutter_sound/flutter_sound.dart';
@@ -44,6 +46,7 @@ class Speech2Text extends StatefulWidget {
 class _Speech2TextState extends State<Speech2Text> {
   final _s2tBloc = S2TBloc();
   final _annotationController = TextEditingController();
+  final _prefs = locator<Preference>();
   List<String> _path = [
     null,
     null,
@@ -525,6 +528,21 @@ class _Speech2TextState extends State<Speech2Text> {
                 Navigator.pop(context);
               }
             }
+            if(state.isNext!=null){
+              if(state.isNext){
+                switch(_prefs.getGameList()[0]){
+                  case 0:
+                    Navigator.of(context).pushReplacementNamed('/speech', arguments: (Route<dynamic> route) => false);
+                    break;
+                  case 1:
+                    Navigator.of(context).pushReplacementNamed('/text', arguments: (Route<dynamic> route) => false);
+                    break;
+                  case 2:
+                    Navigator.of(context).pushReplacementNamed('/validate', arguments: (Route<dynamic> route) => false);
+                    break;
+                }
+              }
+            }
             if (!state.isLoading) {
               _annotationController.text = "";
               sliderCurrentPosition = 0.0;
@@ -615,7 +633,7 @@ class _Speech2TextState extends State<Speech2Text> {
                       padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
                       child: StepProgressIndicator(
                         totalSteps: 10,
-                        currentStep: state.score,
+                        currentStep: _prefs.getGameScore(),
                         size: 12,
                         padding: 1,
                         selectedGradientColor: LinearGradient(

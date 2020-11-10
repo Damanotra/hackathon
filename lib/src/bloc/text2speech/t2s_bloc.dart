@@ -1,15 +1,19 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'package:bloc/bloc.dart';
 import 'package:hackathon/locator.dart';
 import 'package:hackathon/src/bloc/text2speech/t2s_event.dart';
 import 'package:hackathon/src/bloc/text2speech/t2s_state.dart';
 import 'package:hackathon/src/resources/provider/api/action_api.dart';
+import 'package:hackathon/src/resources/provider/shared_preference.dart';
 import 'package:http/http.dart';
 import 'package:path_provider/path_provider.dart';
 
 class T2SBloc extends Bloc<T2SEvent,T2SState>{
   final _api = locator<ActionAPI>();
+  final _prefs = locator<Preference>();
+  final random = locator<Random>();
 
   T2SBloc():super(T2SState.initial());
 
@@ -28,36 +32,9 @@ class T2SBloc extends Bloc<T2SEvent,T2SState>{
   Stream<T2SState> _mapInitialT2SEventToState(InitialT2SEvent event) async* {
     yield state.loading();
     try {
-      List textList = state.textList;
+      final textList = state.textList;
       print(textList);
-      // get list of 10 texts
-      while(textList.length<10 && state.errorMessage==null){
-        final response = await _api.getTexts(event.context,3);
-        if(response['note']!=null){
-          if(response['note']=="invalid session"){
-            print("session expired");
-            yield state.error("Session kadaluarsa, mohon restart app dan login ulang");
-          }
-          else {
-            yield state.error("terjadi kesalahan ${response['note']}");
-          }
-        } else {
-          textList.addAll(response['text'] as List);
-        }
-      }
-      if(state.errorMessage==null) {
-        yield state.ready(textList,0,0);
-      }
-    }  catch (err){
-      yield state.error(err.toString());
-    }
-  }
-
-  Stream<T2SState> _mapSkipEventToState(SkipEvent event) async* {
-    yield state.loading();
-    List textList = state.textList;
-    try{
-      //get new instance of problem
+      // get list of 1 texts
       final response = await _api.getTexts(event.context,1);
       if(response['note']!=null){
         if(response['note']=="invalid session"){
@@ -68,13 +45,26 @@ class T2SBloc extends Bloc<T2SEvent,T2SState>{
           yield state.error("terjadi kesalahan ${response['note']}");
         }
       } else {
-        //add the requested instance
         textList.addAll(response['text'] as List);
       }
-      if(state.isDone==false){
-        //if not done, forward to next problem index
-        yield state.ready(state.textList, state.textIndex+1,state.score);
+      //check if error message exist
+      if(state.errorMessage==null) {
+        yield state.ready(textList,0,0);
       }
+    }  catch (err){
+      yield state.error(err.toString());
+    }
+  }
+
+  Stream<T2SState> _mapSkipEventToState(SkipEvent event) async* {
+    yield state.loading();
+    try{
+      //get new random number for added problem
+      _prefs.addGameList(random.nextInt(3));
+      //pop the list
+      _prefs.popGameList();
+      //yield done
+      yield state.next();
     } catch(err){
       yield state.error(err.toString());
     }
@@ -86,7 +76,6 @@ class T2SBloc extends Bloc<T2SEvent,T2SState>{
     try{
       print("SUBMITTING THE ANNOTATION");
       print(state.textList);
-      print(state.textIndex);
       final response = await _api.annotateText(event.context,event.voicePath,event.text);
       //check if fails
       if(response['note']!=null){
@@ -100,15 +89,19 @@ class T2SBloc extends Bloc<T2SEvent,T2SState>{
       } else {
         //if success
         print("SUBMISSION SUCCESS");
-        if (state.score == 9) {
+        //check if the score become 10 once submit success
+        if(_prefs.getGameScore() == 9){
           print("DONE");
-          //check if the score become 10 once submit success
+          _prefs.setGameScore(0);
+          _prefs.setGameList([]);
           yield state.done();
         } else {
+          //else, add score
+          _prefs.plusGameScore();
           print("FORWARD");
-          //if not done, forward to next problem
-          final textIndex = state.textIndex + 1;
-          yield state.ready(state.textList, state.textIndex+1,state.score+1);
+          //if not done, forward to next problem by deleting current game
+          _prefs.popGameList();
+          yield state.next();
         }
       }
     } catch(err){
