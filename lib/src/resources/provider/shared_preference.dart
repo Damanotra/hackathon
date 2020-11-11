@@ -98,5 +98,15 @@ class Preference {
   void minusGameScore()async{
     if(getGameScore()>0)
       setGameScore(getGameScore()-1);
+    else
+      setGameScore(0);
+  }
+
+  int getGameMax(){
+    return prefs.getInt('gameMax');
+  }
+
+  void setGameMax(value) async{
+    await prefs.setInt('gameMax', value);
   }
 }

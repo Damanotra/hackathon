@@ -325,13 +325,12 @@ class _Speech2TextState extends State<Speech2Text> {
   }
 
   void submitPressed() {
-    _s2tBloc.add(SubmitEvent(
-        annotation: _annotationController.text,
-        context: context));
+    _s2tBloc.add(
+        SubmitEvent(annotation: _annotationController.text, context: context));
   }
 
-  void onTextChanged(String newValue){
-    if(newValue==null || newValue==''){
+  void onTextChanged(String newValue) {
+    if (newValue == null || newValue == '') {
       setState(() {
         submitEnabled = false;
       });
@@ -341,8 +340,6 @@ class _Speech2TextState extends State<Speech2Text> {
       });
     }
   }
-  
-  
 
 //  void Function(bool) audioPlayerSwitchChanged() {
 //    if (!playerModule.isStopped) return null;
@@ -517,7 +514,8 @@ class _Speech2TextState extends State<Speech2Text> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flutter Sound Demo'),
+        title: const Text('Speech To Text'),
+        backgroundColor: Colors.red,
       ),
       body: Center(
         child: BlocListener<S2TBloc, S2TState>(
@@ -528,17 +526,20 @@ class _Speech2TextState extends State<Speech2Text> {
                 Navigator.pop(context);
               }
             }
-            if(state.isNext!=null){
-              if(state.isNext){
-                switch(_prefs.getGameList()[0]){
+            if (state.isNext != null) {
+              if (state.isNext) {
+                switch (_prefs.getGameList()[0]) {
                   case 0:
-                    Navigator.of(context).pushReplacementNamed('/speech', arguments: (Route<dynamic> route) => false);
+                    Navigator.of(context).pushReplacementNamed('/speech',
+                        arguments: (Route<dynamic> route) => false);
                     break;
                   case 1:
-                    Navigator.of(context).pushReplacementNamed('/text', arguments: (Route<dynamic> route) => false);
+                    Navigator.of(context).pushReplacementNamed('/text',
+                        arguments: (Route<dynamic> route) => false);
                     break;
                   case 2:
-                    Navigator.of(context).pushReplacementNamed('/validate', arguments: (Route<dynamic> route) => false);
+                    Navigator.of(context).pushReplacementNamed('/validate',
+                        arguments: (Route<dynamic> route) => false);
                     break;
                 }
               }
@@ -558,94 +559,95 @@ class _Speech2TextState extends State<Speech2Text> {
                 if (state.errorMessage == null) {
                   voicepath = state.localVoicePath;
                   return ListView(
-                    padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.05),
                       children: <Widget>[
-                    playerSection,
-                    Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
-                      child: TextField(
-                        controller: _annotationController,
-                        keyboardType: TextInputType.multiline,
-                        onChanged: onTextChanged,
-                        maxLines: null,
-                        decoration: InputDecoration(
-                            hintText: "Masukan kalimat yang kamu dengar",
-                            //                contentPadding: EdgeInsets.fromLTRB(15, 12, 15, 12),
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(0))),
-                      ),
-                    ),
-                    SizedBox(height: deviceHeight * 0.07),
-                    Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
-                      child: ElevatedButton(
-                        onPressed:  (){
-                          if(_annotationController.text!='' && _annotationController.text!=null){
-                            print(_annotationController.text);
-                            _s2tBloc.add(SubmitEvent(
-                                annotation: _annotationController.text,
-                                context: context));
-                          } else {
-                            Scaffold.of(context).showSnackBar(
-                                SnackBar(content: Text("Annotation Text can't be empty"))
-                            );
-                          }
-                        },
+                        playerSection,
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: deviceWidth * 0.1),
+                          child: TextField(
+                            controller: _annotationController,
+                            keyboardType: TextInputType.multiline,
+                            onChanged: onTextChanged,
+                            maxLines: null,
+                            decoration: InputDecoration(
+                                hintText: "Masukan kalimat yang kamu dengar",
+                                //                contentPadding: EdgeInsets.fromLTRB(15, 12, 15, 12),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(0))),
+                          ),
+                        ),
+                        SizedBox(height: deviceHeight * 0.07),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: deviceWidth * 0.1),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (_annotationController.text != '' &&
+                                  _annotationController.text != null) {
+                                print(_annotationController.text);
+                                _s2tBloc.add(SubmitEvent(
+                                    annotation: _annotationController.text,
+                                    context: context));
+                              } else {
+                                Scaffold.of(context).showSnackBar(SnackBar(
+                                    content: Text(
+                                        "Annotation Text can't be empty")));
+                              }
+                            },
 //                        (_annotationController.text!='' && _annotationController.text!=null) ?
 //                            submitPressed: null,
-                        style: ElevatedButton.styleFrom(
-                            primary: Colors.orange,
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 30, vertical: 15),
-                            textStyle: TextStyle()),
-                        child: Text("Submit"),
-                      ),
-                    ),
-                    SizedBox(
-                      height: deviceHeight * 0.02,
-                    ),
-                    Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
-                      child: ElevatedButton(
-                        onPressed: () {
-                          _s2tBloc.add(SkipEvent());
-                        },
-                        style: ElevatedButton.styleFrom(
-                            primary: Colors.orange,
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 30, vertical: 15),
-                            textStyle: TextStyle()),
-                        child: Text("Skip"),
-                      ),
-                    ),
-                    SizedBox(height: deviceHeight*0.1),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text("SCORE :",
-                        style: TextStyle(
-                          fontSize: 18
-                        ),),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
-                      child: StepProgressIndicator(
-                        totalSteps: 10,
-                        currentStep: _prefs.getGameScore(),
-                        size: 12,
-                        padding: 1,
-                        selectedGradientColor: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Colors.yellowAccent, Colors.deepOrange],
+                            style: ElevatedButton.styleFrom(
+                                primary: Colors.lightGreen,
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 30, vertical: 15),
+                                textStyle: TextStyle()),
+                            child: Text("Submit"),
+                          ),
                         ),
-                        roundedEdges: Radius.circular(10),
-                      ),
-                    )
-                    // ignore: missing_return
-                  ]);
+                        SizedBox(
+                          height: deviceHeight * 0.02,
+                        ),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: deviceWidth * 0.1),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _s2tBloc.add(SkipEvent());
+                            },
+                            style: ElevatedButton.styleFrom(
+                                primary: Colors.orange,
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 30, vertical: 15),
+                                textStyle: TextStyle()),
+                            child: Text("Skip"),
+                          ),
+                        ),
+                        SizedBox(height: deviceHeight * 0.1),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            "SCORE :",
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: deviceWidth * 0.1),
+                          child: StepProgressIndicator(
+                            totalSteps: _prefs.getGameMax(),
+                            currentStep: _prefs.getGameScore(),
+                            size: 12,
+                            padding: 0.25,
+                            selectedGradientColor: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Colors.yellowAccent, Colors.deepOrange],
+                            ),
+                            roundedEdges: Radius.circular(10),
+                          ),
+                        )
+                        // ignore: missing_return
+                      ]);
                 } else {
                   return Text(state.errorMessage);
                 }

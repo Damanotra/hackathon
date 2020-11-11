@@ -692,6 +692,7 @@ class _Text2SpeechState extends State<Text2Speech> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Text To Speech"),
+        backgroundColor: Colors.red,
       ),
       body: Center(
         child: BlocListener<T2SBloc,T2SState>(
@@ -751,7 +752,7 @@ class _Text2SpeechState extends State<Text2Speech> {
 
                         },
                         style: ElevatedButton.styleFrom(
-                            primary: Colors.orange,
+                            primary: Colors.lightGreen,
                             padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                             textStyle: TextStyle()
                         ),
@@ -784,10 +785,10 @@ class _Text2SpeechState extends State<Text2Speech> {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
                       child: StepProgressIndicator(
-                        totalSteps: 10,
+                        totalSteps: _prefs.getGameMax(),
                         currentStep: _prefs.getGameScore(),
                         size: 12,
-                        padding: 1,
+                        padding: 0.25,
                         selectedGradientColor: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,

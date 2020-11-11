@@ -5,9 +5,11 @@ import 'dart:math';
 import 'dart:typed_data' show Uint8List;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hackathon/locator.dart';
 import 'package:hackathon/src/bloc/validate/validate_bloc.dart';
 import 'package:hackathon/src/bloc/validate/validate_event.dart';
 import 'package:hackathon/src/bloc/validate/validate_state.dart';
+import 'package:hackathon/src/resources/provider/shared_preference.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:flutter_sound/flutter_sound.dart';
@@ -43,7 +45,7 @@ class ValidateScreen extends StatefulWidget {
 
 class _ValidateScreenState extends State<ValidateScreen> {
   final _validateBloc = ValidateBloc();
-  final _annotationController = TextEditingController();
+  final _prefs = locator<Preference>();
   List<String> _path = [
     null,
     null,
@@ -83,7 +85,7 @@ class _ValidateScreenState extends State<ValidateScreen> {
     await playerModule.closeAudioSession();
     _isAudioPlayer = withUI;
     await playerModule.openAudioSession(
-        withUI: withUI ,
+        withUI: withUI,
         focus: AudioFocus.requestFocusAndStopOthers,
         category: SessionCategory.playAndRecord,
         mode: SessionMode.modeDefault,
@@ -92,7 +94,6 @@ class _ValidateScreenState extends State<ValidateScreen> {
     initializeDateFormatting();
     await setCodec(_codec);
   }
-
 
   Future<void> init() async {
     await _initializeExample(false);
@@ -103,7 +104,7 @@ class _ValidateScreenState extends State<ValidateScreen> {
 
   Future<void> copyAssets() async {
     Uint8List dataBuffer =
-    (await rootBundle.load("assets/canardo.png")).buffer.asUint8List();
+        (await rootBundle.load("assets/canardo.png")).buffer.asUint8List();
     String path = await playerModule.getResourcePath() + "/assets";
     if (!await Directory(path).exists()) {
       await Directory(path).create(recursive: true);
@@ -141,7 +142,6 @@ class _ValidateScreenState extends State<ValidateScreen> {
     }
   }
 
-
   Future<void> getDuration() async {
     switch (_media) {
       case Media.file:
@@ -151,8 +151,6 @@ class _ValidateScreenState extends State<ValidateScreen> {
     }
     setState(() {});
   }
-
-
 
   Future<bool> fileExists(String path) async {
     return await File(path).exists();
@@ -225,8 +223,7 @@ class _ValidateScreenState extends State<ValidateScreen> {
     return bytes;
   }
 
-  Future<void> feedHim(String path) async
-  {
+  Future<void> feedHim(String path) async {
     Uint8List data = await _readFileByte(path);
     return playerModule.feedFromStream(data);
   }
@@ -244,7 +241,7 @@ class _ValidateScreenState extends State<ValidateScreen> {
         await playerModule.startPlayer(
             fromURI: audioFilePath,
             codec: codec,
-            sampleRate:  SAMPLE_RATE,
+            sampleRate: SAMPLE_RATE,
             whenFinished: () {
               print('Play finished');
               setState(() {});
@@ -258,7 +255,6 @@ class _ValidateScreenState extends State<ValidateScreen> {
     }
   }
 
-
   Future<void> stopPlayer() async {
     try {
       await playerModule.stopPlayer();
@@ -271,21 +267,17 @@ class _ValidateScreenState extends State<ValidateScreen> {
     } catch (err) {
       print('error: $err');
     }
-    this.setState(() {
-    });
+    this.setState(() {});
   }
 
   void pauseResumePlayer() async {
     if (playerModule.isPlaying) {
-      await  playerModule.pausePlayer();
+      await playerModule.pausePlayer();
     } else {
       await playerModule.resumePlayer();
     }
-    setState(() {
-
-    });
+    setState(() {});
   }
-
 
   void seekToPlayer(int milliSecs) async {
     print('-->seekToPlayer');
@@ -294,8 +286,6 @@ class _ValidateScreenState extends State<ValidateScreen> {
     print('<--seekToPlayer');
   }
 
-
-
   void Function() onPauseResumePlayerPressed() {
     if (playerModule == null) return null;
     if (playerModule.isPaused || playerModule.isPlaying) {
@@ -303,7 +293,6 @@ class _ValidateScreenState extends State<ValidateScreen> {
     }
     return null;
   }
-
 
   void Function() onStopPlayerPressed() {
     if (playerModule == null) return null;
@@ -314,7 +303,7 @@ class _ValidateScreenState extends State<ValidateScreen> {
 
   void Function() onStartPlayerPressed() {
     if (playerModule == null) return null;
-    if (_media == Media.file ) {
+    if (_media == Media.file) {
       return (playerModule.isStopped) ? startPlayer : null;
     }
 
@@ -411,11 +400,9 @@ class _ValidateScreenState extends State<ValidateScreen> {
             min: 0.0,
             max: maxDuration,
             onChanged: (double value) async {
-              await seekToPlayer( value.toInt());
+              await seekToPlayer(value.toInt());
             },
             divisions: maxDuration == 0.0 ? 1 : maxDuration.toInt()));
-
-
 
     Widget playerSection = Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -496,7 +483,7 @@ class _ValidateScreenState extends State<ValidateScreen> {
                 min: 0.0,
                 max: maxDuration,
                 onChanged: (double value) async {
-                  await seekToPlayer( value.toInt());
+                  await seekToPlayer(value.toInt());
                 },
                 divisions: maxDuration == 0.0 ? 1 : maxDuration.toInt())),
         Container(
@@ -506,125 +493,148 @@ class _ValidateScreenState extends State<ValidateScreen> {
       ],
     );
 
-    return  Scaffold(
+    return Scaffold(
       appBar: AppBar(
         title: const Text('Validate'),
-
+        backgroundColor: Colors.red,
       ),
-      body: BlocListener<ValidateBloc,ValidateState>(
-        cubit: _validateBloc,
-        listener: (context, state){
-          if(state.isDone){
-            Navigator.pop(context);
-          }
-        },
-        child: BlocBuilder<ValidateBloc,ValidateState>(
+      body: Center(
+        child: BlocListener<ValidateBloc, ValidateState>(
           cubit: _validateBloc,
-          builder: (context, state) {
-            if (!state.isLoading) {
-              if(state.errorMessage==null){
-                voicepath = state.localVoicePath;
-                print(state.voiceList.toString());
-                return ListView(children: <Widget>[
-                  playerSection,
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
-                    child: Text(state.voiceList[state.voiceIndex]["text_label"])
-                  ),
-                  SizedBox(height: deviceHeight * 0.07),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
-                    child: Row(
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            _validateBloc.add(SubmitEvent(
-                                validation: true,
-                                context: context
-                            ));
-                          },
-                          style: ElevatedButton.styleFrom(
-                              primary: Colors.orange,
-                              padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                              textStyle: TextStyle()),
-                          child: Container(
-                            height: deviceHeight*0.06,
-                            width: deviceWidth*0.37,
-                            alignment: AlignmentDirectional.center,
-                            child: Text("True")),
-                        ),
-                        SizedBox(width: deviceWidth*0.06),
-                        ElevatedButton(
-                          onPressed: () {
-                            _validateBloc.add(SubmitEvent(
-                                validation: false,
-                                context: context
-                            ));
-                          },
-                          style: ElevatedButton.styleFrom(
-                              primary: Colors.orange,
-                              padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                              textStyle: TextStyle()),
-                          child: Container(
-                            height: deviceHeight*0.06,
-                            width: deviceWidth*0.37,
-                            alignment: AlignmentDirectional.center,
-                            child: Text("False")),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(
-                    height: deviceHeight * 0.02,
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _validateBloc.add(SkipEvent());
-                      },
-                      style: ElevatedButton.styleFrom(
-                          primary: Colors.orange,
-                          padding:
-                          EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-                          textStyle: TextStyle()),
-                      child: Text("Skip"),
-                    ),
-                  ),
-                  SizedBox(height: deviceHeight*0.1),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text("SCORE :",
-                      style: TextStyle(
-                          fontSize: 18
-                      ),),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.05),
-                    child: StepProgressIndicator(
-                      totalSteps: 10,
-                      currentStep: state.score,
-                      size: 10,
-                      padding: 0,
-                      selectedGradientColor: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Colors.yellowAccent, Colors.deepOrange],
-                      ),
-                      roundedEdges: Radius.circular(10),
-                    ),
-                  )
-                  // ignore: missing_return
-                ]);
-              }
-              else{
-                return Text(state.errorMessage);
-              }
+          listener: (context, state) {
+            if (state.isDone) {
+              Navigator.pop(context);
             }
-            else {
-              return Center(child: CircularProgressIndicator());
+            if (state.isNext != null) {
+              if (state.isNext) {
+                switch (_prefs.getGameList()[0]) {
+                  case 0:
+                    Navigator.of(context).pushReplacementNamed('/speech',
+                        arguments: (Route<dynamic> route) => false);
+                    break;
+                  case 1:
+                    Navigator.of(context).pushReplacementNamed('/text',
+                        arguments: (Route<dynamic> route) => false);
+                    break;
+                  case 2:
+                    Navigator.of(context).pushReplacementNamed('/validate',
+                        arguments: (Route<dynamic> route) => false);
+                    break;
+                }
+              }
             }
           },
+          child: BlocBuilder<ValidateBloc, ValidateState>(
+            cubit: _validateBloc,
+            builder: (context, state) {
+              if (!state.isLoading) {
+                if (state.errorMessage == null) {
+                  voicepath = state.localVoicePath;
+                  print(state.voiceList.toString());
+                  return ListView(
+                      children: <Widget>[
+                        playerSection,
+                        Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: deviceWidth * 0.1),
+                            child: Text(
+                              state.voiceList[0]["text_label"],
+                              style: TextStyle(fontSize: 22),
+                            )),
+                        SizedBox(height: deviceHeight * 0.07),
+                        Padding(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
+                          child: Row(
+                            children: [
+                              ElevatedButton(
+                                onPressed: () {
+                                  _validateBloc.add(SubmitEvent(
+                                      validation: true, context: context));
+                                },
+                                style: ElevatedButton.styleFrom(
+                                    primary: Colors.lightGreen,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 0.0),
+                                    textStyle: TextStyle()),
+                                child: Container(
+                                    height: deviceHeight * 0.06,
+                                    width: deviceWidth * 0.37,
+                                    alignment: AlignmentDirectional.center,
+                                    child: Text("True")),
+                              ),
+                              SizedBox(width: deviceWidth * 0.06),
+                              ElevatedButton(
+                                onPressed: () {
+                                  _validateBloc.add(SubmitEvent(
+                                      validation: false, context: context));
+                                },
+                                style: ElevatedButton.styleFrom(
+                                    primary: Colors.redAccent,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 0.0),
+                                    textStyle: TextStyle()),
+                                child: Container(
+                                    height: deviceHeight * 0.06,
+                                    width: deviceWidth * 0.37,
+                                    alignment: AlignmentDirectional.center,
+                                    child: Text("False")),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                          height: deviceHeight * 0.02,
+                        ),
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _validateBloc.add(SkipEvent());
+                            },
+                            style: ElevatedButton.styleFrom(
+                                primary: Colors.orange,
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 0, vertical: 0),
+                                textStyle: TextStyle()),
+                            child: Text("Skip"),
+                          ),
+                        ),
+                        SizedBox(height: deviceHeight * 0.1),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            "SCORE :",
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                        Padding(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
+                          child: StepProgressIndicator(
+                            totalSteps: _prefs.getGameMax(),
+                            currentStep: _prefs.getGameScore(),
+                            size: 12,
+                            padding: 0.25,
+                            selectedGradientColor: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Colors.yellowAccent, Colors.deepOrange],
+                            ),
+                            roundedEdges: Radius.circular(10),
+                          ),
+                        )
+                        // ignore: missing_return
+                      ]);
+                } else {
+                  return Text(state.errorMessage);
+                }
+              } else {
+                return CircularProgressIndicator();
+              }
+            },
+          ),
         ),
       ),
     );

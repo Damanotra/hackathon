@@ -63,7 +63,7 @@ class T2SBloc extends Bloc<T2SEvent,T2SState>{
       _prefs.addGameList(random.nextInt(3));
       //pop the list
       _prefs.popGameList();
-      //yield done
+      //yield next
       yield state.next();
     } catch(err){
       yield state.error(err.toString());
