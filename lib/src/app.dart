@@ -18,8 +18,12 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     // TODO: implement build
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       initialRoute: '/',
       onGenerateRoute: AppRouter.generateRoute,
+      theme: ThemeData(
+        primaryColor: Colors.red
+      ),
     );
   }
 }

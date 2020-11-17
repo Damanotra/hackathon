@@ -9,7 +9,7 @@ class T2SState{
   T2SState({
     @required this.textList,
     this.errorMessage,
-    @required this.isLoading,
+    this.isLoading = true,
     this.isDone = false,
     this.isNext = false,
   });
@@ -56,11 +56,14 @@ class T2SState{
   }
 
   T2SState error(errorMessage){
+    print("this is error message");
+    print(errorMessage);
     return copyWith(
+      errorMessage: errorMessage,
       isLoading: false,
-      errorMessage: errorMessage
     );
   }
+
   T2SState done(){
     return copyWith(
         isLoading: false,

@@ -7,8 +7,7 @@ import 'package:hackathon/src/bloc/text2speech/t2s_event.dart';
 import 'package:hackathon/src/bloc/text2speech/t2s_state.dart';
 import 'package:hackathon/src/resources/provider/api/action_api.dart';
 import 'package:hackathon/src/resources/provider/shared_preference.dart';
-import 'package:http/http.dart';
-import 'package:path_provider/path_provider.dart';
+
 
 class T2SBloc extends Bloc<T2SEvent,T2SState>{
   final _api = locator<ActionAPI>();
@@ -39,9 +38,11 @@ class T2SBloc extends Bloc<T2SEvent,T2SState>{
       if(response['note']!=null){
         if(response['note']=="invalid session"){
           print("session expired");
+          yield state.copyWith(errorMessage: "Session kadaluarsa, mohon restart app dan login ulang");
           yield state.error("Session kadaluarsa, mohon restart app dan login ulang");
         }
         else {
+          yield state.copyWith(errorMessage: "terjadi kesalahan ${response['note']}");
           yield state.error("terjadi kesalahan ${response['note']}");
         }
       } else {

@@ -41,9 +41,11 @@ class S2TBloc extends Bloc<S2TEvent,S2TState>{
       if(response['note']!=null){
         if(response['note']=="invalid session"){
           print("session expired");
+          yield state.copyWith(errorMessage: "Session kadaluarsa, mohon restart app dan login ulang");
           yield state.error("Session kadaluarsa, mohon restart app dan login ulang");
         }
         else {
+          yield state.copyWith(errorMessage: "terjadi kesalahan ${response['note']}");
           yield state.error("terjadi kesalahan ${response['note']}");
         }
       } else {
@@ -51,8 +53,8 @@ class S2TBloc extends Bloc<S2TEvent,S2TState>{
       }
       //check if error message empty
       if(state.errorMessage==null) {
-        print("http://5.189.150.137:5000/download_audio/${voiceList[0]}");
-        final bytes = await readBytes("http://5.189.150.137:5000/download_audio/${voiceList[0]}");
+        print("http://5.189.150.137:5100/download_audio/${voiceList[0]}");
+        final bytes = await readBytes("http://5.189.150.137:5100/download_audio/${voiceList[0]}");
         final dir = await getApplicationDocumentsDirectory();
         final file = File('${dir.path}/audio.wav');
         print("bytes downloaded");

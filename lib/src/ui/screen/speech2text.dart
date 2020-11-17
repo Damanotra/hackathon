@@ -565,6 +565,7 @@ class _Speech2TextState extends State<Speech2Text> {
                           padding: EdgeInsets.symmetric(
                               horizontal: deviceWidth * 0.1),
                           child: TextField(
+                            maxLength: 200,
                             controller: _annotationController,
                             keyboardType: TextInputType.multiline,
                             onChanged: onTextChanged,

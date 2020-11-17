@@ -17,7 +17,7 @@ import 'package:flutter_sound/flutter_sound.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 
-const int SAMPLE_RATE = 8000;
+const int SAMPLE_RATE = 44100;
 const int BLOCK_SIZE = 4096;
 
 
@@ -216,7 +216,7 @@ class _Text2SpeechState extends State<Text2Speech> {
         await recorderModule.startRecorder(
           toFile: path,
           codec: _codec,
-          bitRate: 8000,
+          bitRate: 131072,
           numChannels: 1,
           sampleRate: SAMPLE_RATE,
         );
@@ -722,86 +722,114 @@ class _Text2SpeechState extends State<Text2Speech> {
           child: BlocBuilder<T2SBloc,T2SState>(
             cubit: _t2sBloc,
             builder: (context,state){
-              if(state.isLoading){
-                return CircularProgressIndicator();
-              } else if(state.errorMessage==null){
-                return ListView(
-                  children: <Widget>[
-                    SizedBox(height: deviceHeight*0.05),
-                    Center(
-                        child: Text(
-                          '"${state.textList[0]}"',
-                          style: TextStyle(fontSize: 20),
+              print(state.isLoading);
+              print(state.errorMessage);
+              if(!state.isLoading){
+                if(state.errorMessage==null){
+                  return ListView(
+                    children: <Widget>[
+                      SizedBox(height: deviceHeight*0.05),
+                      Center(
+                          child: Text(
+                            '"${state.textList[0]}"',
+                            style: TextStyle(fontSize: 20),
+                          )
+                      ),
+                      SizedBox(height: deviceHeight*0.02),
+                      recorderSection,
+                      Visibility(
+                        visible: (_path[_codec.index]!=null && !recorderModule.isRecording) ? true : false,
+                        child: playerSection
+                      ),
+                      Visibility(
+                        visible: (_path[_codec.index]!=null && !recorderModule.isRecording) ? false : true,
+                        child: Container(
+                          height: 175,
                         )
-                    ),
-                    SizedBox(height: deviceHeight*0.02),
-                    recorderSection,
-                    playerSection,
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
-                      child: ElevatedButton(
-                        onPressed: (){
-                          if(this._path[_codec.index]!=null){
-                            print(this._path[_codec.index]);
-                            _t2sBloc.add(SubmitEvent(text: state.textList[0], voicePath: this._path[_codec.index]));
-                          } else {
-                            Scaffold.of(context).showSnackBar(
-                              SnackBar(content: Text("Recording can't be empty"))
-                            );
-                          }
-
-                        },
-                        style: ElevatedButton.styleFrom(
-                            primary: Colors.lightGreen,
-                            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                            textStyle: TextStyle()
-                        ),
-                        child: Text("Submit"),
                       ),
-                    ),
-                    SizedBox(height: deviceHeight*0.02,),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
-                      child: ElevatedButton(
-                        onPressed: (){
-                          _t2sBloc.add(SkipEvent());
-                        },
-                        style: ElevatedButton.styleFrom(
-                            primary: Colors.orange,
-                            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                            textStyle: TextStyle()
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
+                        child: ElevatedButton(
+                          onPressed: (){
+                            if(this._path[_codec.index]!=null && !recorderModule.isRecording && !playerModule.isPlaying){
+                              print(this._path[_codec.index]);
+                              if(_duration>15.0){
+                                Scaffold.of(context).showSnackBar(
+                                    SnackBar(content: Text("Rekaman lebih dari 15 detik"))
+                                );
+                              }
+                              else _t2sBloc.add(SubmitEvent(text: state.textList[0], voicePath: this._path[_codec.index]));
+                            } else if(this._path[_codec.index]==null) {
+                              Scaffold.of(context).showSnackBar(
+                                  SnackBar(content: Text("Rekaman tidak boleh kosong"))
+                              );
+                            } else {
+                              Scaffold.of(context).showSnackBar(
+                                  SnackBar(content: Text("Please stop the recorder/player first"))
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                              primary: Colors.lightGreen,
+                              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                              textStyle: TextStyle()
+                          ),
+                          child: Text("Submit"),
                         ),
-                        child: Text("Skip"),
                       ),
-                    ),
-                    SizedBox(height: deviceHeight*0.05),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text("SCORE :",
-                        style: TextStyle(
-                            fontSize: 18
-                        ),),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
-                      child: StepProgressIndicator(
-                        totalSteps: _prefs.getGameMax(),
-                        currentStep: _prefs.getGameScore(),
-                        size: 12,
-                        padding: 0.25,
-                        selectedGradientColor: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Colors.yellowAccent, Colors.deepOrange],
+                      SizedBox(height: deviceHeight*0.02,),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
+                        child: ElevatedButton(
+                          onPressed: (){
+                            if(!recorderModule.isRecording && !playerModule.isPlaying){
+                              _t2sBloc.add(SkipEvent());
+                            } else {
+                              Scaffold.of(context).showSnackBar(
+                                  SnackBar(content: Text("Please stop the recorder/player first"))
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                              primary: Colors.orange,
+                              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                              textStyle: TextStyle()
+                          ),
+                          child: Text("Skip"),
                         ),
-                        roundedEdges: Radius.circular(10),
                       ),
-                    )
-                  ],
-                );
-              } else{
-                return Text(state.errorMessage);
+                      SizedBox(height: deviceHeight*0.05),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text("SCORE :",
+                          style: TextStyle(
+                              fontSize: 18
+                          ),),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
+                        child: StepProgressIndicator(
+                          totalSteps: _prefs.getGameMax(),
+                          currentStep: _prefs.getGameScore(),
+                          size: 12,
+                          padding: 0.25,
+                          selectedGradientColor: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Colors.yellowAccent, Colors.deepOrange],
+                          ),
+                          roundedEdges: Radius.circular(10),
+                        ),
+                      )
+                    ],
+                  );
+                } else{
+                  return Text(state.errorMessage);
+                }
+              } else {
+                  return CircularProgressIndicator();
               }
+
             },
           ),
         ),

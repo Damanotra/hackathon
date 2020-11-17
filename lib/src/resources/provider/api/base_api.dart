@@ -12,7 +12,7 @@ class BaseAPI{
   String baseURL;
 
   BaseAPI(){
-    baseURL = 'http://5.189.150.137:5000/';
+    baseURL = 'http://5.189.150.137:5100/';
   }
 
   Future<dynamic> doPost(String url,dynamic body,BuildContext context) async {
