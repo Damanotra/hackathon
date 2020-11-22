@@ -575,24 +575,24 @@ class _Text2SpeechState extends State<Text2Speech> {
                   ),
                 ),
               ),
-              Container(
-                width: 56.0,
-                height: 50.0,
-                child: ClipOval(
-                  child: FlatButton(
-                    onPressed: onPauseResumeRecorderPressed(),
-                    disabledColor: Colors.white,
-                    padding: EdgeInsets.all(8.0),
-                    child: Image(
-                      width: 36.0,
-                      height: 36.0,
-                      image: AssetImage(onPauseResumeRecorderPressed() != null
-                          ? 'res/icons/ic_pause.png'
-                          : 'res/icons/ic_pause_disabled.png'),
-                    ),
-                  ),
-                ),
-              ),
+//              Container(
+//                width: 56.0,
+//                height: 50.0,
+//                child: ClipOval(
+//                  child: FlatButton(
+//                    onPressed: onPauseResumeRecorderPressed(),
+//                    disabledColor: Colors.white,
+//                    padding: EdgeInsets.all(8.0),
+//                    child: Image(
+//                      width: 36.0,
+//                      height: 36.0,
+//                      image: AssetImage(onPauseResumeRecorderPressed() != null
+//                          ? 'res/icons/ic_pause.png'
+//                          : 'res/icons/ic_pause_disabled.png'),
+//                    ),
+//                  ),
+//                ),
+//              ),
             ],
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -700,7 +700,7 @@ class _Text2SpeechState extends State<Text2Speech> {
           listener: (context,state){
             if(state.isDone!=null){
               if(state.isDone){
-                Navigator.pop(context);
+                Navigator.of(context).pushReplacementNamed('/finish', arguments: (Route<dynamic> route) => false);
               }
             }
             if(state.isNext!=null){

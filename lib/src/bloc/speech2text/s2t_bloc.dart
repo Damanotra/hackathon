@@ -54,17 +54,21 @@ class S2TBloc extends Bloc<S2TEvent,S2TState>{
       //check if error message empty
       if(state.errorMessage==null) {
         print("http://5.189.150.137:5100/download_audio/${voiceList[0]}");
-        final bytes = await readBytes("http://5.189.150.137:5100/download_audio/${voiceList[0]}");
+        print("downloading");
+        final bytes = await readBytes("http://5.189.150.137:5100/download_audio/${voiceList[0]}").timeout(const Duration(seconds: 15));
+        print("writing to file");
         final dir = await getApplicationDocumentsDirectory();
         final file = File('${dir.path}/audio.wav');
-        print("bytes downloaded");
         await file.writeAsBytes(bytes);
         if (await file.exists()) {
+          print("file ready");
           yield state.ready(voiceList, 0,file.path,0);
         }
       }
 
-    }  catch (err){
+    } on TimeoutException  catch (err){
+      yield state.error("Request timeout");
+    } catch (err){
       yield state.error(err.toString());
     }
   }

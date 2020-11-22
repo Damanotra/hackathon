@@ -78,7 +78,7 @@ class S2TState{
 
   S2TState next(){
     return copyWith(
-      isLoading: false,
+      isLoading: true,
       errorMessage: null,
       isNext: true
     );

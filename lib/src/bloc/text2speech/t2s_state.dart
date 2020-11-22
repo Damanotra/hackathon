@@ -74,7 +74,7 @@ class T2SState{
 
   T2SState next(){
     return copyWith(
-        isLoading: false,
+        isLoading: true,
         errorMessage: null,
         isNext: true
     );

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:hackathon/src/ui/screen/finish.dart';
 import 'package:hackathon/src/ui/screen/home.dart';
 import 'package:hackathon/src/ui/screen/lobby.dart';
 import 'package:hackathon/src/ui/screen/login.dart';
 import 'package:hackathon/src/ui/screen/signup.dart';
 import 'package:hackathon/src/ui/screen/speech2text.dart';
+import 'package:hackathon/src/ui/screen/splash.dart';
 import 'package:hackathon/src/ui/screen/text2speech.dart';
 import 'package:hackathon/src/ui/screen/validate.dart';
 
@@ -12,7 +14,7 @@ class AppRouter {
     switch(settings.name){
       case '/':
         return MaterialPageRoute(
-          builder: (_) => LoginScreen(),
+          builder: (_) => SplashScreen(),
         );
       case '/home':
         return MaterialPageRoute(
@@ -37,6 +39,10 @@ class AppRouter {
       case '/login':
         return MaterialPageRoute(
             builder: (_) => LoginScreen()
+        );
+      case '/finish':
+        return MaterialPageRoute(
+            builder: (_) => FinishScreen()
         );
     }
   }

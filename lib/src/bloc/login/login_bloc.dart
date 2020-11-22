@@ -20,16 +20,9 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     }
   }
 
-  Stream<LoginState> _mapInitialLoginEventToState(
-      InitialLoginEvent event) async* {
-    yield state.loading();
+  Stream<LoginState> _mapInitialLoginEventToState(InitialLoginEvent event) async* {
     try {
-      final checkSession = await _api.checkSession(event.context);
-      if (checkSession['note'] == null) {
-        yield state.success();
-      } else {
-        yield state.ready(null);
-      }
+      yield state.ready(null);
     } catch (err) {
       yield state.ready(err.toString());
     }

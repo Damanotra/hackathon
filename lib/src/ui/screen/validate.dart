@@ -503,7 +503,7 @@ class _ValidateScreenState extends State<ValidateScreen> {
           cubit: _validateBloc,
           listener: (context, state) {
             if (state.isDone) {
-              Navigator.pop(context);
+              Navigator.of(context).pushReplacementNamed('/finish', arguments: (Route<dynamic> route) => false);
             }
             if (state.isNext != null) {
               if (state.isNext) {
@@ -628,7 +628,32 @@ class _ValidateScreenState extends State<ValidateScreen> {
                         // ignore: missing_return
                       ]);
                 } else {
-                  return Text(state.errorMessage);
+                  if (state.errorMessage == "Request timeout") {
+                    return ListView(shrinkWrap: true, children: [
+                      Center(
+                        child: Text(
+                          "Request Timeout",
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ),
+                      SizedBox(height: deviceHeight*0.05),
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _validateBloc.add(SkipEvent());
+                          },
+                          style: ElevatedButton.styleFrom(
+                              primary: Colors.orange,
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 30, vertical: 15),
+                              textStyle: TextStyle()),
+                          child: Text("Skip"),
+                        ),
+                      ),
+                    ]);
+                  } else {
+                    return Text(state.errorMessage);
+                  }
                 }
               } else {
                 return CircularProgressIndicator();

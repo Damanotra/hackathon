@@ -523,7 +523,8 @@ class _Speech2TextState extends State<Speech2Text> {
           listener: (context, state) {
             if (state.isDone != null) {
               if (state.isDone) {
-                Navigator.pop(context);
+                Navigator.of(context).pushReplacementNamed('/finish',
+                    arguments: (Route<dynamic> route) => false);
               }
             }
             if (state.isNext != null) {
@@ -558,99 +559,122 @@ class _Speech2TextState extends State<Speech2Text> {
               if (!state.isLoading) {
                 if (state.errorMessage == null) {
                   voicepath = state.localVoicePath;
-                  return ListView(
-                      children: <Widget>[
-                        playerSection,
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: deviceWidth * 0.1),
-                          child: TextField(
-                            maxLength: 200,
-                            controller: _annotationController,
-                            keyboardType: TextInputType.multiline,
-                            onChanged: onTextChanged,
-                            maxLines: null,
-                            decoration: InputDecoration(
-                                hintText: "Masukan kalimat yang kamu dengar",
-                                //                contentPadding: EdgeInsets.fromLTRB(15, 12, 15, 12),
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(0))),
-                          ),
-                        ),
-                        SizedBox(height: deviceHeight * 0.07),
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: deviceWidth * 0.1),
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (_annotationController.text != '' &&
-                                  _annotationController.text != null) {
-                                print(_annotationController.text);
-                                _s2tBloc.add(SubmitEvent(
-                                    annotation: _annotationController.text,
-                                    context: context));
-                              } else {
-                                Scaffold.of(context).showSnackBar(SnackBar(
-                                    content: Text(
-                                        "Annotation Text can't be empty")));
-                              }
-                            },
+                  return ListView(children: <Widget>[
+                    playerSection,
+                    Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
+                      child: TextField(
+                        maxLength: 200,
+                        controller: _annotationController,
+                        keyboardType: TextInputType.multiline,
+                        onChanged: onTextChanged,
+                        maxLines: null,
+                        decoration: InputDecoration(
+                            hintText: "Masukan kalimat yang kamu dengar",
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(0))),
+                      ),
+                    ),
+                    SizedBox(height: deviceHeight * 0.07),
+                    Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_annotationController.text != '' &&
+                              _annotationController.text != null) {
+                            print(_annotationController.text);
+                            _s2tBloc.add(SubmitEvent(
+                                annotation: _annotationController.text,
+                                context: context));
+                          } else {
+                            Scaffold.of(context).showSnackBar(SnackBar(
+                                content:
+                                    Text("Annotation Text can't be empty")));
+                          }
+                        },
 //                        (_annotationController.text!='' && _annotationController.text!=null) ?
 //                            submitPressed: null,
-                            style: ElevatedButton.styleFrom(
-                                primary: Colors.lightGreen,
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 30, vertical: 15),
-                                textStyle: TextStyle()),
-                            child: Text("Submit"),
-                          ),
+                        style: ElevatedButton.styleFrom(
+                            primary: Colors.lightGreen,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 30, vertical: 15),
+                            textStyle: TextStyle()),
+                        child: Text("Submit"),
+                      ),
+                    ),
+                    SizedBox(
+                      height: deviceHeight * 0.02,
+                    ),
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          _s2tBloc.add(SkipEvent());
+                        },
+                        style: ElevatedButton.styleFrom(
+                            primary: Colors.orange,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 30, vertical: 15),
+                            textStyle: TextStyle()),
+                        child: Text("Skip"),
+                      ),
+                    ),
+                    SizedBox(height: deviceHeight * 0.1),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        "SCORE :",
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
+                      child: StepProgressIndicator(
+                        totalSteps: _prefs.getGameMax(),
+                        currentStep: _prefs.getGameScore(),
+                        size: 12,
+                        padding: 0.25,
+                        selectedGradientColor: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Colors.yellowAccent, Colors.deepOrange],
                         ),
-                        SizedBox(
-                          height: deviceHeight * 0.02,
-                        ),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: deviceWidth * 0.1),
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _s2tBloc.add(SkipEvent());
-                            },
-                            style: ElevatedButton.styleFrom(
-                                primary: Colors.orange,
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 30, vertical: 15),
-                                textStyle: TextStyle()),
-                            child: Text("Skip"),
-                          ),
-                        ),
-                        SizedBox(height: deviceHeight * 0.1),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            "SCORE :",
-                            style: TextStyle(fontSize: 18),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: deviceWidth * 0.1),
-                          child: StepProgressIndicator(
-                            totalSteps: _prefs.getGameMax(),
-                            currentStep: _prefs.getGameScore(),
-                            size: 12,
-                            padding: 0.25,
-                            selectedGradientColor: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [Colors.yellowAccent, Colors.deepOrange],
-                            ),
-                            roundedEdges: Radius.circular(10),
-                          ),
-                        )
-                        // ignore: missing_return
-                      ]);
+                        roundedEdges: Radius.circular(10),
+                      ),
+                    )
+                    // ignore: missing_return
+                  ]);
                 } else {
-                  return Text(state.errorMessage);
+                  if (state.errorMessage == "Request timeout") {
+                    return ListView(shrinkWrap: true, children: [
+                      Center(
+                        child: Text(
+                          "Request Timeout",
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ),
+                      SizedBox(height: deviceHeight*0.05),
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _s2tBloc.add(SkipEvent());
+                          },
+                          style: ElevatedButton.styleFrom(
+                              primary: Colors.orange,
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 30, vertical: 15),
+                              textStyle: TextStyle()),
+                          child: Text("Skip"),
+                        ),
+                      ),
+                    ]);
+                  } else {
+                    return Text(state.errorMessage);
+                  }
                 }
               } else {
                 return CircularProgressIndicator();

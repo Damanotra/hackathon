@@ -107,7 +107,7 @@ class _Speech2TextState extends State<Speech2Text> {
 
   Future<void> init() async {
     await _initializeExample(false);
-    await _loadFile();
+    //await _loadFile();
     if (Platform.isAndroid) {
       await copyAssets();
     }

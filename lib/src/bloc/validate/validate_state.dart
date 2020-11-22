@@ -76,7 +76,7 @@ class ValidateState{
 
   ValidateState next(){
     return copyWith(
-        isLoading: false,
+        isLoading: true,
         errorMessage: null,
         isNext: true
     );

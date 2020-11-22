@@ -105,6 +105,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
           children: [
             GestureDetector(
               onTap: (){
+//                Navigator.of(context).pushNamed('/finish', arguments: (Route<dynamic> route) => false);
                 generateGameList();
                 switch(_prefs.getGameList()[0]){
                   case 0:
@@ -117,7 +118,6 @@ class _LobbyScreenState extends State<LobbyScreen> {
                     Navigator.of(context).pushNamed('/validate', arguments: (Route<dynamic> route) => false);
                     break;
                 }
-//                Navigator.of(context).pushNamed('/speech', arguments: (Route<dynamic> route) => false);
               },
               child: Container(
                 height: deviceHeight*0.55,
