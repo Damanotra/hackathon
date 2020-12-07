@@ -111,7 +111,7 @@ class ValidateBloc extends Bloc<ValidateEvent,ValidateState>{
         //check if validation true
         if(response['result'] == true){
           print("VALIDATION TRUE");
-          if(_prefs.getGameScore()== 9){
+          if(_prefs.getGameScore()== _prefs.getGameMax()-1){
             print("DONE");
             _prefs.setGameScore(0);
             _prefs.setGameList([]);

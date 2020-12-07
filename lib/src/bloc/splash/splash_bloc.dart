@@ -8,7 +8,6 @@ import 'package:hackathon/src/resources/provider/shared_preference.dart';
 class SplashBloc extends Bloc<SplashEvent, SplashState> {
   SplashBloc() : super(SplashState.initial());
   final _api = locator<ActionAPI>();
-  final _prefs = locator<Preference>();
 
   @override
   Stream<SplashState> mapEventToState(SplashEvent event) async* {
@@ -21,9 +20,9 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
   Stream<SplashState> _mapInitialSplashEventToState(InitialSplashEvent event) async* {
     yield state.loading();
     try {
-      final checkSession = await _api.checkSession(event.context);
-      if (checkSession['note'] == null) {
-        yield state.success();
+      final response = await _api.checkSession(event.context);
+      if (response['note'] == null) {
+        yield state.success(response['data']['contribution'],response['data']['point'],response['data']['minus_point']);
       } else {
         yield state.ready(null);
       }

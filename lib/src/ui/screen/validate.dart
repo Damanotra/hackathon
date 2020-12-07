@@ -561,7 +561,7 @@ class _ValidateScreenState extends State<ValidateScreen> {
                                     height: deviceHeight * 0.06,
                                     width: deviceWidth * 0.37,
                                     alignment: AlignmentDirectional.center,
-                                    child: Text("True")),
+                                    child: Text("Correct")),
                               ),
                               SizedBox(width: deviceWidth * 0.06),
                               ElevatedButton(
@@ -578,7 +578,7 @@ class _ValidateScreenState extends State<ValidateScreen> {
                                     height: deviceHeight * 0.06,
                                     width: deviceWidth * 0.37,
                                     alignment: AlignmentDirectional.center,
-                                    child: Text("False")),
+                                    child: Text("Wrong")),
                               ),
                             ],
                           ),
@@ -612,17 +612,19 @@ class _ValidateScreenState extends State<ValidateScreen> {
                         Padding(
                           padding:
                               EdgeInsets.symmetric(horizontal: deviceWidth * 0.1),
-                          child: StepProgressIndicator(
-                            totalSteps: _prefs.getGameMax(),
-                            currentStep: _prefs.getGameScore(),
-                            size: 12,
-                            padding: 0.25,
-                            selectedGradientColor: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [Colors.yellowAccent, Colors.deepOrange],
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: StepProgressIndicator(
+                              totalSteps: _prefs.getGameMax(),
+                              currentStep: _prefs.getGameScore(),
+                              size: 12,
+                              padding: 0.25,
+                              selectedGradientColor: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Colors.yellowAccent, Colors.deepOrange],
+                              ),
                             ),
-                            roundedEdges: Radius.circular(10),
                           ),
                         )
                         // ignore: missing_return

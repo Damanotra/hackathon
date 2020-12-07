@@ -13,14 +13,16 @@ class _FinishScreenState extends State<FinishScreen> {
   final random = locator<Random>();
 
   generateGameList() {
-    _prefs.setGameList([]);
-    print(_prefs.getGameMax());
-    for(var i=0;i<_prefs.getGameMax();i++){
-      _prefs.addGameList(random.nextInt(3));
+    if(_prefs.getGameMax()>0){
+      _prefs.setGameList([]);
+      print(_prefs.getGameMax());
+      for (var i = 0; i < _prefs.getGameMax(); i++) {
+        _prefs.addGameList(random.nextInt(3));
+      }
+      _prefs.setGameScore(0);
+      print(_prefs.getGameList());
+      print(_prefs.getGameScore());
     }
-    _prefs.setGameScore(0);
-    print(_prefs.getGameList());
-    print(_prefs.getGameScore());
   }
 
   @override
@@ -49,7 +51,7 @@ class _FinishScreenState extends State<FinishScreen> {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
+                      Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
                     },
                     style: ElevatedButton.styleFrom(
                         primary: Colors.redAccent,

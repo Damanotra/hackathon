@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 
 class LoginState{
-  bool isLoading;
-  bool isSuccess;
-  String errorMessage;
+  final bool isLoading;
+  final bool isSuccess;
+  final String errorMessage;
 
   LoginState({this.isLoading,this.isSuccess,this.errorMessage});
 

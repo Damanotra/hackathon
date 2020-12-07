@@ -192,6 +192,7 @@ class _Text2SpeechState extends State<Text2Speech> {
   }
 
   void startRecorder() async {
+    stopPlayer();
     try {
       // Request Microphone permission if needed
       PermissionStatus status = await Permission.microphone.request();
@@ -431,6 +432,7 @@ class _Text2SpeechState extends State<Text2Speech> {
       print('error: $err');
     }
     this.setState(() {
+        this._playerTxt = '00:00:00';
     });
   }
 
@@ -753,9 +755,14 @@ class _Text2SpeechState extends State<Text2Speech> {
                           onPressed: (){
                             if(this._path[_codec.index]!=null && !recorderModule.isRecording && !playerModule.isPlaying){
                               print(this._path[_codec.index]);
+                              print(_duration);
                               if(_duration>15.0){
                                 Scaffold.of(context).showSnackBar(
                                     SnackBar(content: Text("Rekaman lebih dari 15 detik"))
+                                );
+                              } else if(_duration<1.0){
+                                Scaffold.of(context).showSnackBar(
+                                    SnackBar(content: Text("Rekaman kurang dari 1 detik"))
                                 );
                               }
                               else _t2sBloc.add(SubmitEvent(text: state.textList[0], voicePath: this._path[_codec.index]));
@@ -808,17 +815,20 @@ class _Text2SpeechState extends State<Text2Speech> {
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: deviceWidth*0.1),
-                        child: StepProgressIndicator(
-                          totalSteps: _prefs.getGameMax(),
-                          currentStep: _prefs.getGameScore(),
-                          size: 12,
-                          padding: 0.25,
-                          selectedGradientColor: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [Colors.yellowAccent, Colors.deepOrange],
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: StepProgressIndicator(
+                            totalSteps: _prefs.getGameMax(),
+                            currentStep: _prefs.getGameScore(),
+                            size: 12,
+                            padding: 0.25,
+                            selectedGradientColor: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Colors.yellowAccent, Colors.deepOrange],
+                            ),
+
                           ),
-                          roundedEdges: Radius.circular(10),
                         ),
                       )
                     ],

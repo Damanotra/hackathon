@@ -91,7 +91,7 @@ class T2SBloc extends Bloc<T2SEvent,T2SState>{
         //if success
         print("SUBMISSION SUCCESS");
         //check if the score become 10 once submit success
-        if(_prefs.getGameScore() == 9){
+        if(_prefs.getGameScore() == _prefs.getGameMax()-1){
           print("DONE");
           _prefs.setGameScore(0);
           _prefs.setGameList([]);

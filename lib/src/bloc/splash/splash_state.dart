@@ -1,25 +1,37 @@
 import 'package:flutter/cupertino.dart';
 
 class SplashState{
-  bool isLoading;
-  bool isSuccess;
-  String errorMessage;
+  final bool isLoading;
+  final bool isSuccess;
+  final String errorMessage;
+  final int contribution;
+  final int points;
+  final int minusPoints;
 
-  SplashState({
+  SplashState( {
     this.isLoading=true,
     this.isSuccess=false,
-    this.errorMessage
+    this.errorMessage,
+    this.contribution,
+    this.points,
+    this.minusPoints,
   });
 
   SplashState copyWith({
     bool isLoading,
     bool isSuccess,
     String errorMessage,
+    int contribution,
+    int points,
+    int minusPoints,
   }) {
     return SplashState(
         isLoading: isLoading ?? this.isLoading,
         isSuccess: isSuccess ?? this.isSuccess,
         errorMessage: errorMessage ?? this.errorMessage,
+        contribution: contribution ?? this.contribution,
+        points: points ?? this.points,
+        minusPoints: minusPoints ?? this.minusPoints
     );
   }
 
@@ -45,11 +57,14 @@ class SplashState{
     );
   }
 
-  SplashState success(){
+  SplashState success(contribution,points, minusPoints){
     return copyWith(
       isLoading: false,
       isSuccess: true,
-      errorMessage: null
+      errorMessage: null,
+      contribution: contribution,
+      points: points,
+      minusPoints: minusPoints
     );
   }
 }

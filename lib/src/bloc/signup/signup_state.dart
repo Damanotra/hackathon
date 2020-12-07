@@ -1,9 +1,9 @@
 
 
 class SignupState{
-  bool isLoading;
-  bool isSuccess;
-  String errorMessage;
+  final bool isLoading;
+  final bool isSuccess;
+  final String errorMessage;
 
   SignupState({this.isLoading,this.isSuccess,this.errorMessage});
 

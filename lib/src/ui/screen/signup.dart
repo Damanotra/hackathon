@@ -58,9 +58,10 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       SizedBox(height: deviceHeight*0.02),
                       TextFormField(
+                        obscureText: true,
                         controller: _passwordController,
                         decoration: InputDecoration(
-                            hintText: "Email",
+                            hintText: "Password",
                             border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(0))),
                       ),
@@ -69,7 +70,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         onPressed: (){
                           _signupBloc.add(SubmitEvent(email: _emailController.text,password: _passwordController.text));
                         },
-                        child: Text("Signup"),
+                        child: Text("Sign Up"),
                         style: ElevatedButton.styleFrom(
                             primary: Colors.orange,
                             padding:

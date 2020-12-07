@@ -108,8 +108,8 @@ class S2TBloc extends Bloc<S2TEvent,S2TState>{
       } else {
         //if success
         print("SUBMISSION SUCCESS");
-        //check if the score become 10 once submit success
-        if(_prefs.getGameScore() == 9){
+        //check if the score become max score once submit success
+        if(_prefs.getGameScore() == _prefs.getGameMax()-1){
           print("DONE");
           _prefs.setGameScore(0);
           yield state.done();
